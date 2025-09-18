@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { parse } from 'mathjs';
 import { useTheme } from '../hooks/useTheme';
 
@@ -6,12 +6,16 @@ import { useTheme } from '../hooks/useTheme';
 declare global {
   interface Window {
     katex?: {
-      render: (tex: string, element: HTMLElement, options?: {
-        displayMode?: boolean;
-        throwOnError?: boolean;
-        errorColor?: string;
-        strict?: boolean;
-      }) => void;
+      render: (
+        tex: string,
+        element: HTMLElement,
+        options?: {
+          displayMode?: boolean;
+          throwOnError?: boolean;
+          errorColor?: string;
+          strict?: boolean;
+        }
+      ) => void;
     };
   }
 }
@@ -22,21 +26,22 @@ interface MathEquationProps {
   className?: string;
 }
 
-/**
- * Component to render mathematical equations using KaTeX
- * Provides textbook-quality mathematical notation
- */
-const MathEquation: React.FC<MathEquationProps> = ({ 
-  equation, 
-  displayMode = false, 
-  className = '' 
-}) => {
+export default function MathEquation({
+  equation,
+  displayMode = false,
+  className = '',
+}: MathEquationProps) {
   const { theme } = useTheme();
   const mathRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const element = mathRef.current;
     if (!element) return;
+
+    if (!equation.trim()) {
+      element.textContent = '';
+      return;
+    }
 
     if (typeof window !== 'undefined' && window.katex) {
       try {
@@ -54,24 +59,21 @@ const MathEquation: React.FC<MathEquationProps> = ({
     }
 
     element.innerHTML = formatMathFallback(equation);
-  }, [equation, displayMode, theme.palette.error.main]);
+  }, [equation, displayMode, theme]);
 
   return <span ref={mathRef} className={className} />;
-};
+}
 
-/**
- * Convert basic math notation to LaTeX using mathjs built-in toTex()
- */
 const convertToLatex = (equation: string): string => {
   try {
     const parts = equation.split('=');
     if (parts.length !== 2) {
       return formatMathFallback(equation);
     }
-    
+
     const leftLatex = parse(parts[0].trim()).toTex();
     const rightLatex = parse(parts[1].trim()).toTex();
-    
+
     return `${leftLatex} = ${rightLatex}`;
   } catch (error) {
     console.warn('LaTeX conversion failed, using fallback formatting:', error);
@@ -79,11 +81,8 @@ const convertToLatex = (equation: string): string => {
   }
 };
 
-/**
- * Unified fallback formatting for both mathjs parse errors and missing KaTeX
- */
 const formatMathFallback = (equation: string): string => {
-  return equation
+  const safe = escapeHtml(equation)
     .replace(/\*/g, '×')
     .replace(/sqrt\(/gi, '√(')
     .replace(/abs\(([^)]+)\)/gi, '|$1|')
@@ -93,6 +92,14 @@ const formatMathFallback = (equation: string): string => {
     .replace(/\+/g, ' + ')
     .replace(/-/g, ' − ')
     .trim();
+  return safe;
 };
 
-export default MathEquation;
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}

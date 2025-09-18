@@ -1,52 +1,60 @@
-import React from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Divider,
-  IconButton,
-} from '@mui/material';
+import { useMemo } from 'react';
+import { Box, Typography, Paper, Divider, IconButton } from '@mui/material';
 import { Star, TrendingUp, CheckCircle, Calculate, ArrowBack } from '@mui/icons-material';
-import { useGameStore } from '../stores/gameStore';
-import { useTheme } from '../hooks/useTheme';
+import type { Solution } from '../types/game';
+import { useTheme as useMuiTheme } from '@mui/material/styles';
 import MathEquation from './MathEquation';
 
 interface StatsProps {
   onBack?: () => void;
+  score: number;
+  streak: number;
+  solutions: Solution[];
+  currentDate: string;
 }
 
-const Stats: React.FC<StatsProps> = ({ onBack }) => {
-  const { theme } = useTheme();
-  const { score, streak, solutions, currentDate } = useGameStore();
+export default function Stats({ onBack, score, streak, solutions, currentDate }: StatsProps) {
+  const theme = useMuiTheme();
 
-  // Use theme colors directly for better dark mode reactivity
+  const statCards = useMemo(
+    () => [
+      {
+        icon: <CheckCircle sx={{ color: theme.palette.success.main }} />,
+        label: 'Solutions Today',
+        value: solutions.length,
+        description: `Equations solved for ${currentDate}`,
+      },
+      {
+        icon: <Star sx={{ color: theme.palette.warning.main }} />,
+        label: 'Total Score',
+        value: score,
+        description: 'Points earned from all solutions',
+      },
+      {
+        icon: <TrendingUp sx={{ color: theme.palette.success.main }} />,
+        label: 'Current Streak',
+        value: streak,
+        description: 'Days with at least one solution',
+      },
+      {
+        icon: <Calculate sx={{ color: theme.palette.text.primary }} />,
+        label: 'Average Score',
+        value: solutions.length > 0 ? Math.round(score / solutions.length) : 0,
+        description: 'Average points per solution',
+      },
+    ],
+    [
+      theme.palette.success.main,
+      theme.palette.warning.main,
+      theme.palette.text.primary,
+      solutions.length,
+      currentDate,
+      score,
+      streak,
+    ]
+  );
 
-  const statCards = [
-    {
-      icon: <CheckCircle sx={{ color: theme.palette.success.main }} />,
-      label: 'Solutions Today',
-      value: solutions.length,
-      description: `Equations solved for ${currentDate}`,
-    },
-    {
-      icon: <Star sx={{ color: theme.palette.warning.main }} />,
-      label: 'Total Score',
-      value: score,
-      description: 'Points earned from all solutions',
-    },
-    {
-      icon: <TrendingUp sx={{ color: theme.palette.success.main }} />,
-      label: 'Current Streak',
-      value: streak,
-      description: 'Days with at least one solution',
-    },
-    {
-      icon: <Calculate sx={{ color: theme.palette.text.primary }} />,
-      label: 'Average Score',
-      value: solutions.length > 0 ? Math.round(score / solutions.length) : 0,
-      description: 'Average points per solution',
-    },
-  ];
+  const solutionsReversed = useMemo(() => solutions.slice().reverse(), [solutions]);
 
   return (
     <Box
@@ -59,7 +67,6 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
         minHeight: '100vh',
       }}
     >
-      {/* Header */}
       <Box sx={{ position: 'relative', mb: 4 }}>
         {onBack && (
           <IconButton
@@ -75,7 +82,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
             <ArrowBack />
           </IconButton>
         )}
-        
+
         <Typography
           variant="h4"
           sx={{
@@ -89,7 +96,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
         >
           Your Stats
         </Typography>
-        
+
         <Typography
           sx={{
             fontSize: '14px',
@@ -102,7 +109,6 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
         </Typography>
       </Box>
 
-      {/* Stats Grid */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
         {statCards.map((stat, index) => (
           <Paper
@@ -127,7 +133,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
                 {stat.label}
               </Typography>
             </Box>
-            
+
             <Typography
               sx={{
                 fontSize: '32px',
@@ -138,7 +144,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
             >
               {stat.value}
             </Typography>
-            
+
             <Typography
               sx={{
                 fontSize: '12px',
@@ -152,11 +158,10 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
         ))}
       </Box>
 
-      {/* Solutions History */}
-      {solutions.length > 0 && (
+      {solutionsReversed.length > 0 && (
         <>
           <Divider sx={{ my: 3, borderColor: theme.palette.divider }} />
-          
+
           <Typography
             variant="h6"
             sx={{
@@ -167,11 +172,15 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
           >
             Today's Solutions
           </Typography>
-          
+
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {solutions.slice().reverse().map((solution, index) => (
+            {solutionsReversed.map((solution: Solution, index: number) => (
               <Paper
-                key={index}
+                key={
+                  typeof solution.timestamp === 'string' || solution.timestamp instanceof Date
+                    ? new Date(solution.timestamp).getTime()
+                    : index
+                }
                 elevation={0}
                 sx={{
                   p: 2,
@@ -181,11 +190,8 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
                 }}
               >
                 <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <MathEquation 
-                    equation={solution.equation}
-                    className="math-equation"
-                  />
-                  
+                  <MathEquation equation={solution.equation} className="math-equation" />
+
                   <Box display="flex" alignItems="center" gap={1}>
                     <Typography
                       sx={{
@@ -196,7 +202,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
                     >
                       {solution.complexity}
                     </Typography>
-                    
+
                     <Typography
                       sx={{
                         fontSize: '14px',
@@ -233,6 +239,4 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
       )}
     </Box>
   );
-};
-
-export default Stats;
+}

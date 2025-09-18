@@ -13,7 +13,16 @@ import {
   ListItemButton,
   Divider,
 } from '@mui/material';
-import { Backspace, Close, Menu, BarChart, Calculate, LightMode, DarkMode, SettingsBrightness } from '@mui/icons-material';
+import {
+  Backspace,
+  Close,
+  Menu,
+  BarChart,
+  Calculate,
+  LightMode,
+  DarkMode,
+  SettingsBrightness,
+} from '@mui/icons-material';
 import { RadioGroup, FormControlLabel, Radio } from '@mui/material';
 import { useGameStore } from '../stores/gameStore';
 import { useTheme } from '../hooks/useTheme';
@@ -26,14 +35,11 @@ import Stats from './Stats';
 const CrackleDateCard: React.FC = () => {
   const { theme, isDarkMode, themeMode, setThemeMode } = useTheme();
 
-  const {
-    currentDate,
-    equation,
-    setEquation,
-    setValid,
-    addSolution,
-    loadGameState,
-  } = useGameStore();
+  const { currentDate, equation, setEquation, setValid, addSolution, loadGameState } =
+    useGameStore();
+  const score = useGameStore((s) => s.score);
+  const streak = useGameStore((s) => s.streak);
+  const solutions = useGameStore((s) => s.solutions);
 
   // Load game state on component mount
   React.useEffect(() => {
@@ -60,7 +66,7 @@ const CrackleDateCard: React.FC = () => {
   // Calculate dynamic button sizes for perfect alignment
   const clearSubmitWidth = 304; // 2 × 140px + 24px gap
   const standardGap = 8; // gap={1} = 8px
-  
+
   const getButtonWidth = (buttonsPerRow: number) => {
     const totalGapWidth = (buttonsPerRow - 1) * standardGap;
     return (clearSubmitWidth - totalGapWidth) / buttonsPerRow;
@@ -78,25 +84,29 @@ const CrackleDateCard: React.FC = () => {
       : isDarkMode
         ? theme.palette.grey[800]
         : theme.palette.grey[300],
-    color: isDisabled
-      ? theme.palette.text.disabled
-      : theme.palette.text.primary,
+    color: isDisabled ? theme.palette.text.disabled : theme.palette.text.primary,
     border: 'none',
     borderRadius: '8px',
     boxShadow: 'none',
     opacity: isDisabled ? 0.5 : 1,
     cursor: isDisabled ? 'not-allowed' : 'pointer',
-    '&:hover': !isDisabled ? {
-      backgroundColor: isDarkMode ? theme.palette.grey[700] : theme.palette.grey[400],
-      boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
-      transform: 'translateY(-1px)',
-    } : {},
-    '&:active': !isDisabled ? {
-      transform: 'translateY(0px)',
-      boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.1)}`,
-    } : {},
+    '&:hover': !isDisabled
+      ? {
+          backgroundColor: isDarkMode ? theme.palette.grey[700] : theme.palette.grey[400],
+          boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
+          transform: 'translateY(-1px)',
+        }
+      : {},
+    '&:active': !isDisabled
+      ? {
+          transform: 'translateY(0px)',
+          boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.1)}`,
+        }
+      : {},
     '&.Mui-disabled': {
-      color: isDarkMode ? alpha(theme.palette.text.primary, 0.5) : alpha(theme.palette.text.primary, 0.4),
+      color: isDarkMode
+        ? alpha(theme.palette.text.primary, 0.5)
+        : alpha(theme.palette.text.primary, 0.4),
       backgroundColor: theme.palette.action.disabled,
     },
     textTransform: 'none',
@@ -111,7 +121,7 @@ const CrackleDateCard: React.FC = () => {
       setEquation(equation + value);
       return;
     }
-    
+
     // For single characters, use the existing validation
     const validation = validateEquationInput(equation, value, currentDate);
     if (validation.isValid) {
@@ -154,7 +164,7 @@ const CrackleDateCard: React.FC = () => {
 
     // Extract all digits from the equation
     const usedDigits = equation.match(/\d/g) || [];
-    
+
     // Check if all date digits are used exactly once in order
     if (usedDigits.length !== digitsArray.length) {
       return false;
@@ -197,7 +207,6 @@ const CrackleDateCard: React.FC = () => {
     }
   };
 
-
   return (
     <React.Fragment>
       {currentPage === 'game' ? (
@@ -211,7 +220,7 @@ const CrackleDateCard: React.FC = () => {
             minHeight: '100vh',
           }}
           tabIndex={0}
-          onKeyDown={e => {
+          onKeyDown={(e) => {
             // Handle keyboard input for typing directly into equation
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -223,7 +232,7 @@ const CrackleDateCard: React.FC = () => {
               }
               return;
             }
-            
+
             if (e.key === 'Backspace') {
               e.preventDefault();
               if (equation.length > 0) {
@@ -231,12 +240,12 @@ const CrackleDateCard: React.FC = () => {
               }
               return;
             }
-            
+
             // Ignore modifier keys
             if (['Shift', 'Control', 'Alt', 'Meta', 'Tab', 'CapsLock', 'Escape'].includes(e.key)) {
               return;
             }
-            
+
             // Allow only valid characters
             const allowedRegex = /^[0-9+\-*/^%()= x!sqrtab]$/;
             if (!allowedRegex.test(e.key)) {
@@ -244,10 +253,10 @@ const CrackleDateCard: React.FC = () => {
               setSnackbarOpen(true);
               return;
             }
-            
+
             e.preventDefault();
             const newValue = equation + e.key;
-            
+
             // Allow only digits and math operators (no letters)
             const fullAllowedRegex = /^[0-9+\-*/^%()= x!sqrtab]*$/;
             if (!fullAllowedRegex.test(newValue)) {
@@ -255,7 +264,7 @@ const CrackleDateCard: React.FC = () => {
               setSnackbarOpen(true);
               return;
             }
-            
+
             // Enforce digit order and only allow each digit once
             const usedDigits = newValue.match(/\d/g) || [];
             for (let i = 0; i < usedDigits.length; i++) {
@@ -270,16 +279,38 @@ const CrackleDateCard: React.FC = () => {
               setSnackbarOpen(true);
               return;
             }
-            
+
             setEquation(newValue);
           }}
         >
           {/* Header - CrackleDate Style */}
           <Box sx={{ position: 'relative', mb: 4 }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ position: 'fixed', top: 0, left: 0, width: '100vw', zIndex: 100, mb: 0.5, px: 2, py: 1, borderRadius: 0, backgroundColor: theme.palette.background.paper }}>
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                zIndex: 100,
+                mb: 0.5,
+                px: 2,
+                py: 1,
+                borderRadius: 0,
+                backgroundColor: theme.palette.background.paper,
+              }}
+            >
               <Box display="flex" alignItems="center">
                 <Calculate sx={{ fontSize: 36, mr: 1 }} />
-                <Typography variant="h5" component="h1" fontWeight={700} letterSpacing={2} sx={{ fontSize: 32 }}>
+                <Typography
+                  variant="h5"
+                  component="h1"
+                  fontWeight={700}
+                  letterSpacing={2}
+                  sx={{ fontSize: 32 }}
+                >
                   Crackle Date
                 </Typography>
               </Box>
@@ -291,7 +322,10 @@ const CrackleDateCard: React.FC = () => {
 
           {/* Date Digits */}
           <Box sx={{ mt: 8, mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ textAlign: 'center', color: theme.palette.text.secondary, mb: 1 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ textAlign: 'center', color: theme.palette.text.secondary, mb: 1 }}
+            >
               {currentDate}
             </Typography>
             <Box display="flex" justifyContent="center" gap={1} mb={3}>
@@ -318,7 +352,9 @@ const CrackleDateCard: React.FC = () => {
                       backgroundColor: isUsed
                         ? theme.palette.success.main
                         : isAllowed
-                          ? (isDarkMode ? theme.palette.grey[800] : theme.palette.grey[300])
+                          ? isDarkMode
+                            ? theme.palette.grey[800]
+                            : theme.palette.grey[300]
                           : theme.palette.action.disabled,
                       color: isUsed
                         ? theme.palette.common.white
@@ -327,23 +363,35 @@ const CrackleDateCard: React.FC = () => {
                           : theme.palette.text.disabled,
                       border: 'none',
                       borderRadius: '8px',
-                      boxShadow: isUsed ? `0 2px 8px ${alpha(theme.palette.success.main, 0.3)}` : 'none',
+                      boxShadow: isUsed
+                        ? `0 2px 8px ${alpha(theme.palette.success.main, 0.3)}`
+                        : 'none',
                       opacity: isUsed ? 1 : isAllowed ? 1 : 0.5,
                       cursor: isUsed ? 'default' : isAllowed ? 'pointer' : 'not-allowed',
-                      '&:hover': isAllowed && !isUsed ? {
-                        backgroundColor: isDarkMode ? theme.palette.grey[700] : theme.palette.grey[400],
-                        boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
-                        transform: 'translateY(-1px)',
-                      } : {},
-                      '&:active': isAllowed && !isUsed ? {
-                        transform: 'translateY(0px)',
-                        boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.1)}`,
-                      } : {},
+                      '&:hover':
+                        isAllowed && !isUsed
+                          ? {
+                              backgroundColor: isDarkMode
+                                ? theme.palette.grey[700]
+                                : theme.palette.grey[400],
+                              boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
+                              transform: 'translateY(-1px)',
+                            }
+                          : {},
+                      '&:active':
+                        isAllowed && !isUsed
+                          ? {
+                              transform: 'translateY(0px)',
+                              boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.1)}`,
+                            }
+                          : {},
                       textTransform: 'none',
                       transition: 'all 0.2s ease',
                       '&.Mui-disabled': {
                         color: isUsed ? theme.palette.common.white : theme.palette.text.disabled,
-                        backgroundColor: isUsed ? theme.palette.success.main : theme.palette.action.disabled,
+                        backgroundColor: isUsed
+                          ? theme.palette.success.main
+                          : theme.palette.action.disabled,
                       },
                     }}
                   >
@@ -355,177 +403,187 @@ const CrackleDateCard: React.FC = () => {
           </Box>
 
           {/* Equation Display */}
-            <Box sx={{ mb: 3 }}>
-              <Box
+          <Box sx={{ mb: 3 }}>
+            <Box
+              sx={{
+                border: `2px solid ${theme.palette.text.primary}`,
+                borderRadius: '4px',
+                p: 2,
+                minHeight: 56,
+                display: 'flex',
+                alignItems: 'center',
+                backgroundColor: theme.palette.background.paper,
+                position: 'relative',
+              }}
+            >
+              <Typography
                 sx={{
-                  border: `2px solid ${theme.palette.text.primary}`,
-                  borderRadius: '4px',
-                  p: 2,
-                  minHeight: 56,
-                  display: 'flex',
-                  alignItems: 'center',
-                  backgroundColor: theme.palette.background.paper,
-                  position: 'relative',
+                  fontSize: '24px',
+                  fontWeight: 600,
+                  fontFamily: 'monospace',
+                  color: theme.palette.text.primary,
+                  flexGrow: 1,
+                  minHeight: '1.5em',
                 }}
               >
-                <Typography
-                  sx={{
-                    fontSize: '24px',
-                    fontWeight: 600,
-                    fontFamily: 'monospace',
-                    color: theme.palette.text.primary,
-                    flexGrow: 1,
-                    minHeight: '1.5em',
-                  }}
-                >
-                  {equation || (
-                    <span style={{ color: theme.palette.text.secondary, fontSize: '24px' }}>
-                      Input your equation
-                    </span>
-                  )}
-                </Typography>
-                {equation && (
-                  <IconButton
-                    onClick={removeLastChar}
-                    size="small"
-                    sx={{
-                      color: theme.palette.text.primary,
-                      '&:hover': {
-                        backgroundColor: theme.palette.action.hover,
-                      },
-                    }}
-                  >
-                    <Backspace fontSize="small" />
-                  </IconButton>
+                {equation || (
+                  <span style={{ color: theme.palette.text.secondary, fontSize: '24px' }}>
+                    Input your equation
+                  </span>
                 )}
-              </Box>
-            </Box>
-
-            {/* Keyboard Layout - CrackleDate Style */}
-            <Box sx={{ mb: 2 }}>
-              {/* Dynamic Operator Rows */}
-              {operatorRows.map((row, rowIndex) => (
-                <Box key={rowIndex} display="flex" justifyContent="center" gap={1} mb={1}>
-                  {row.operators.map((operator, opIndex) => {
-                    const label = row.labels ? row.labels[opIndex] : operator;
-                    const isEqualsButton = operator === '=';
-                    const isDisabled = isEqualsButton && equation.includes('=');
-                    
-                    return (
-                      <Button
-                        key={operator}
-                        onClick={() => addToEquation(operator)}
-                        disabled={isDisabled}
-                        sx={getOperatorButtonStyles(row.buttonsPerRow, isDisabled)}
-                      >
-                        {label}
-                      </Button>
-                    );
-                  })}
-                </Box>
-              ))}
-
-              {/* Row 4: clear submit */}
-              <Box display="flex" justifyContent="center" gap={3} sx={{ mt: 3 }}>
-                <Button
-                  onClick={clearEquation}
-                  sx={{
-                    minWidth: 140,
-                    minHeight: 64,
-                    fontSize: '16px',
-                    fontWeight: 600,
-                    letterSpacing: '0.5px',
-                    backgroundColor: isDarkMode ? theme.palette.grey[800] : theme.palette.grey[300],
-                    color: theme.palette.text.primary,
-                    border: 'none',
-                    borderRadius: '8px',
-                    boxShadow: 'none',
-                    '&:hover': {
-                      backgroundColor: isDarkMode ? theme.palette.grey[700] : theme.palette.grey[400],
-                      boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
-                      transform: 'translateY(-1px)',
-                    },
-                    '&:active': {
-                      transform: 'translateY(0px)',
-                      boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.1)}`,
-                    },
-                    textTransform: 'uppercase',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  Clear
-                </Button>
-                <Button
-                  onClick={validateEquationHandler}
-                  disabled={!isEquationReadyForSubmission()}
-                  sx={{
-                    minWidth: 140,
-                    minHeight: 64,
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    letterSpacing: '0.5px',
-                    backgroundColor: theme.palette.success.main,
-                    color: theme.palette.common.white,
-                    border: 'none',
-                    borderRadius: '8px',
-                    boxShadow: `0 2px 8px ${alpha(theme.palette.success.main, 0.3)}`,
-                    '&:hover': {
-                      backgroundColor: alpha(theme.palette.success.main, 0.9),
-                      boxShadow: `0 4px 12px ${alpha(theme.palette.success.main, 0.4)}`,
-                      transform: 'translateY(-2px)',
-                    },
-                    '&:active': {
-                      transform: 'translateY(-1px)',
-                      boxShadow: `0 2px 8px ${alpha(theme.palette.success.main, 0.3)}`,
-                    },
-                    '&.Mui-disabled': {
-                      backgroundColor: theme.palette.mode === 'dark' 
-                        ? alpha(theme.palette.background.paper, 0.6) 
-                        : alpha(theme.palette.text.primary, 0.1),
-                      color: theme.palette.mode === 'dark' 
-                        ? alpha(theme.palette.text.primary, 0.5) 
-                        : alpha(theme.palette.text.primary, 0.4),
-                      boxShadow: 'none',
-                    },
-                    textTransform: 'uppercase',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  Submit
-                </Button>
-              </Box>
-            </Box>
-
-            {/* Snackbar for messages */}
-            <Snackbar
-              open={snackbarOpen}
-              autoHideDuration={3000}
-              onClose={() => setSnackbarOpen(false)}
-              anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-              sx={{
-                '& .MuiSnackbarContent-root': {
-                  backgroundColor: validationResult?.isValid ? theme.palette.success.main : theme.palette.error.main,
-                  color: theme.palette.common.white,
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  borderRadius: '4px',
-                }
-              }}
-              message={snackbarMessage}
-              action={
+              </Typography>
+              {equation && (
                 <IconButton
+                  onClick={removeLastChar}
                   size="small"
-                  aria-label="close"
-                  color="inherit"
-                  onClick={() => setSnackbarOpen(false)}
+                  sx={{
+                    color: theme.palette.text.primary,
+                    '&:hover': {
+                      backgroundColor: theme.palette.action.hover,
+                    },
+                  }}
                 >
-                  <Close fontSize="small" />
+                  <Backspace fontSize="small" />
                 </IconButton>
-              }
-            />
+              )}
+            </Box>
+          </Box>
+
+          {/* Keyboard Layout - CrackleDate Style */}
+          <Box sx={{ mb: 2 }}>
+            {/* Dynamic Operator Rows */}
+            {operatorRows.map((row, rowIndex) => (
+              <Box key={rowIndex} display="flex" justifyContent="center" gap={1} mb={1}>
+                {row.operators.map((operator, opIndex) => {
+                  const label = row.labels ? row.labels[opIndex] : operator;
+                  const isEqualsButton = operator === '=';
+                  const isDisabled = isEqualsButton && equation.includes('=');
+
+                  return (
+                    <Button
+                      key={operator}
+                      onClick={() => addToEquation(operator)}
+                      disabled={isDisabled}
+                      sx={getOperatorButtonStyles(row.buttonsPerRow, isDisabled)}
+                    >
+                      {label}
+                    </Button>
+                  );
+                })}
+              </Box>
+            ))}
+
+            {/* Row 4: clear submit */}
+            <Box display="flex" justifyContent="center" gap={3} sx={{ mt: 3 }}>
+              <Button
+                onClick={clearEquation}
+                sx={{
+                  minWidth: 140,
+                  minHeight: 64,
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  letterSpacing: '0.5px',
+                  backgroundColor: isDarkMode ? theme.palette.grey[800] : theme.palette.grey[300],
+                  color: theme.palette.text.primary,
+                  border: 'none',
+                  borderRadius: '8px',
+                  boxShadow: 'none',
+                  '&:hover': {
+                    backgroundColor: isDarkMode ? theme.palette.grey[700] : theme.palette.grey[400],
+                    boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
+                    transform: 'translateY(-1px)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0px)',
+                    boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.1)}`,
+                  },
+                  textTransform: 'uppercase',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Clear
+              </Button>
+              <Button
+                onClick={validateEquationHandler}
+                disabled={!isEquationReadyForSubmission()}
+                sx={{
+                  minWidth: 140,
+                  minHeight: 64,
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
+                  backgroundColor: theme.palette.success.main,
+                  color: theme.palette.common.white,
+                  border: 'none',
+                  borderRadius: '8px',
+                  boxShadow: `0 2px 8px ${alpha(theme.palette.success.main, 0.3)}`,
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.success.main, 0.9),
+                    boxShadow: `0 4px 12px ${alpha(theme.palette.success.main, 0.4)}`,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(-1px)',
+                    boxShadow: `0 2px 8px ${alpha(theme.palette.success.main, 0.3)}`,
+                  },
+                  '&.Mui-disabled': {
+                    backgroundColor:
+                      theme.palette.mode === 'dark'
+                        ? alpha(theme.palette.background.paper, 0.6)
+                        : alpha(theme.palette.text.primary, 0.1),
+                    color:
+                      theme.palette.mode === 'dark'
+                        ? alpha(theme.palette.text.primary, 0.5)
+                        : alpha(theme.palette.text.primary, 0.4),
+                    boxShadow: 'none',
+                  },
+                  textTransform: 'uppercase',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Submit
+              </Button>
+            </Box>
+          </Box>
+
+          {/* Snackbar for messages */}
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={3000}
+            onClose={() => setSnackbarOpen(false)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            sx={{
+              '& .MuiSnackbarContent-root': {
+                backgroundColor: validationResult?.isValid
+                  ? theme.palette.success.main
+                  : theme.palette.error.main,
+                color: theme.palette.common.white,
+                fontSize: '14px',
+                fontWeight: 500,
+                borderRadius: '4px',
+              },
+            }}
+            message={snackbarMessage}
+            action={
+              <IconButton
+                size="small"
+                aria-label="close"
+                color="inherit"
+                onClick={() => setSnackbarOpen(false)}
+              >
+                <Close fontSize="small" />
+              </IconButton>
+            }
+          />
         </Box>
       ) : (
-        <Stats onBack={() => setCurrentPage('game')} />
+        <Stats
+          onBack={() => setCurrentPage('game')}
+          score={score}
+          streak={streak}
+          solutions={solutions}
+          currentDate={currentDate}
+        />
       )}
 
       {/* Hamburger Menu Drawer */}
@@ -561,20 +619,21 @@ const CrackleDateCard: React.FC = () => {
               sx={{
                 borderRadius: '8px',
                 mb: 1,
-                backgroundColor: currentPage === 'game' ? theme.palette.action.hover : 'transparent',
+                backgroundColor:
+                  currentPage === 'game' ? theme.palette.action.hover : 'transparent',
               }}
             >
               <ListItemIcon>
                 <Menu sx={{ color: theme.palette.text.primary }} />
               </ListItemIcon>
-              <ListItemText 
-                primary="Game" 
-                sx={{ 
-                  '& .MuiListItemText-primary': { 
+              <ListItemText
+                primary="Game"
+                sx={{
+                  '& .MuiListItemText-primary': {
                     color: theme.palette.text.primary,
                     fontWeight: currentPage === 'game' ? 600 : 400,
-                  } 
-                }} 
+                  },
+                }}
               />
             </ListItemButton>
             <ListItemButton
@@ -585,24 +644,27 @@ const CrackleDateCard: React.FC = () => {
               sx={{
                 borderRadius: '8px',
                 mb: 1,
-                backgroundColor: currentPage === 'stats' ? theme.palette.action.hover : 'transparent',
+                backgroundColor:
+                  currentPage === 'stats' ? theme.palette.action.hover : 'transparent',
               }}
             >
               <ListItemIcon>
                 <BarChart sx={{ color: theme.palette.text.primary }} />
               </ListItemIcon>
-              <ListItemText 
-                primary="Stats" 
-                sx={{ 
-                  '& .MuiListItemText-primary': { 
+              <ListItemText
+                primary="Stats"
+                sx={{
+                  '& .MuiListItemText-primary': {
                     color: theme.palette.text.primary,
                     fontWeight: currentPage === 'stats' ? 600 : 400,
-                  } 
-                }} 
+                  },
+                }}
               />
             </ListItemButton>
             <Divider sx={{ my: 2, borderColor: theme.palette.divider }} />
-            <Typography sx={{ color: theme.palette.text.secondary, fontSize: 12, mb: 1, px: 1 }}>Theme</Typography>
+            <Typography sx={{ color: theme.palette.text.secondary, fontSize: 12, mb: 1, px: 1 }}>
+              Theme
+            </Typography>
             <RadioGroup
               aria-label="Theme"
               value={themeMode}
@@ -611,14 +673,19 @@ const CrackleDateCard: React.FC = () => {
               <FormControlLabel
                 value="light"
                 control={<Radio size="small" />}
-                label={<Box display="flex" alignItems="center" gap={1}><LightMode fontSize="small"/> Light</Box>}
+                label={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <LightMode fontSize="small" /> Light
+                  </Box>
+                }
                 sx={{
                   m: 0,
                   px: 1,
                   py: 0.5,
                   borderRadius: '8px',
                   borderLeft: '3px solid transparent',
-                  transition: 'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
+                  transition:
+                    'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
                   '&:hover': { backgroundColor: theme.palette.action.hover },
                   '&:active': {
                     transform: 'translateY(1px)',
@@ -633,14 +700,19 @@ const CrackleDateCard: React.FC = () => {
               <FormControlLabel
                 value="dark"
                 control={<Radio size="small" />}
-                label={<Box display="flex" alignItems="center" gap={1}><DarkMode fontSize="small"/> Dark</Box>}
+                label={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <DarkMode fontSize="small" /> Dark
+                  </Box>
+                }
                 sx={{
                   m: 0,
                   px: 1,
                   py: 0.5,
                   borderRadius: '8px',
                   borderLeft: '3px solid transparent',
-                  transition: 'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
+                  transition:
+                    'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
                   '&:hover': { backgroundColor: theme.palette.action.hover },
                   '&:active': {
                     transform: 'translateY(1px)',
@@ -655,14 +727,19 @@ const CrackleDateCard: React.FC = () => {
               <FormControlLabel
                 value="system"
                 control={<Radio size="small" />}
-                label={<Box display="flex" alignItems="center" gap={1}><SettingsBrightness fontSize="small"/> System</Box>}
+                label={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <SettingsBrightness fontSize="small" /> System
+                  </Box>
+                }
                 sx={{
                   m: 0,
                   px: 1,
                   py: 0.5,
                   borderRadius: '8px',
                   borderLeft: '3px solid transparent',
-                  transition: 'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
+                  transition:
+                    'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
                   '&:hover': { backgroundColor: theme.palette.action.hover },
                   '&:active': {
                     transform: 'translateY(1px)',

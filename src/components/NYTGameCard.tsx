@@ -48,6 +48,53 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
   const digitsArray = getDigitsArray(dateDigits);
 
   // NYT-style colors
+  // Operator button configuration
+  const operatorRows = [
+    { operators: ['+', '-', '*', '/'], buttonsPerRow: 4 },
+    { operators: ['^', '%', 'sqrt(', 'abs('], labels: ['^', '%', '√', '||'], buttonsPerRow: 4 },
+    { operators: ['(', ')', '='], buttonsPerRow: 3 },
+  ];
+
+  // Calculate dynamic button sizes for perfect alignment
+  const clearSubmitWidth = 304; // 2 × 140px + 24px gap
+  const standardGap = 8; // gap={1} = 8px
+  
+  const getButtonWidth = (buttonsPerRow: number) => {
+    const totalGapWidth = (buttonsPerRow - 1) * standardGap;
+    return (clearSubmitWidth - totalGapWidth) / buttonsPerRow;
+  };
+
+  // Standard operator button styles
+  const getOperatorButtonStyles = (buttonsPerRow: number, isDisabled: boolean = false) => ({
+    minWidth: getButtonWidth(buttonsPerRow),
+    minHeight: 64,
+    fontSize: '24px',
+    fontWeight: 700,
+    letterSpacing: '0.5px',
+    backgroundColor: isDisabled ? (isDarkMode ? '#3A3A3C' : '#E4E4E7') : colors.keyBackground,
+    color: isDisabled ? (isDarkMode ? '#9CA3AF' : '#6B7280') : colors.text,
+    border: 'none',
+    borderRadius: '8px',
+    boxShadow: 'none',
+    opacity: isDisabled ? 0.5 : 1,
+    cursor: isDisabled ? 'not-allowed' : 'pointer',
+    '&:hover': !isDisabled ? {
+      backgroundColor: colors.keyBackgroundHover,
+      boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+      transform: 'translateY(-1px)',
+    } : {},
+    '&:active': !isDisabled ? {
+      transform: 'translateY(0px)',
+      boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
+    } : {},
+    '&.Mui-disabled': {
+      color: isDarkMode ? alpha(colors.text, 0.5) : alpha(colors.text, 0.4),
+      backgroundColor: isDarkMode ? '#3A3A3C' : '#E4E4E7',
+    },
+    textTransform: 'none',
+    transition: 'all 0.2s ease',
+  });
+
   const colors = {
     text: isDarkMode ? '#FFFFFF' : '#121213',
     textLight: isDarkMode ? '#818384' : '#787C7E',
@@ -78,6 +125,47 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
   const clearEquation = () => {
     setEquation('');
     setValidationResult(null);
+  };
+
+  // Check if equation is ready for submission (all date digits used + equals sign + digits on both sides)
+  const isEquationReadyForSubmission = () => {
+    if (!equation.includes('=') || !equation.trim()) {
+      return false;
+    }
+
+    // Split equation by equals sign
+    const parts = equation.split('=');
+    if (parts.length !== 2) {
+      return false; // Should have exactly one equals sign
+    }
+
+    const leftSide = parts[0].trim();
+    const rightSide = parts[1].trim();
+
+    // Check if both sides have digits
+    const leftDigits = leftSide.match(/\d/g) || [];
+    const rightDigits = rightSide.match(/\d/g) || [];
+
+    if (leftDigits.length === 0 || rightDigits.length === 0) {
+      return false; // Must have digits on both sides
+    }
+
+    // Extract all digits from the equation
+    const usedDigits = equation.match(/\d/g) || [];
+    
+    // Check if all date digits are used exactly once in order
+    if (usedDigits.length !== digitsArray.length) {
+      return false;
+    }
+
+    // Verify each digit matches the expected order
+    for (let i = 0; i < digitsArray.length; i++) {
+      if (parseInt(usedDigits[i]) !== digitsArray[i]) {
+        return false;
+      }
+    }
+
+    return true;
   };
 
   const removeLastChar = () => {
@@ -275,253 +363,27 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
 
       {/* Keyboard Layout - NYT Style */}
       <Box sx={{ mb: 2 }}>
-        {/* Row 1: + - * / */}
-        <Box display="flex" justifyContent="center" gap={1} mb={1}>
-          {['+', '-', '*', '/'].map((key) => (
-            <Button
-              key={key}
-              onClick={() => addToEquation(key)}
-              sx={{
-                minWidth: 64,
-                minHeight: 64,
-                fontSize: '24px',
-                fontWeight: 700,
-                letterSpacing: '0.5px',
-                backgroundColor: colors.keyBackground,
-                color: colors.text,
-                border: 'none',
-                borderRadius: '8px',
-                boxShadow: 'none',
-                '&:hover': {
-                  backgroundColor: colors.keyBackgroundHover,
-                  boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
-                  transform: 'translateY(-1px)',
-                },
-                '&:active': {
-                  transform: 'translateY(0px)',
-                  boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
-                },
-                textTransform: 'none',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {key}
-            </Button>
-          ))}
-        </Box>
-
-        {/* Row 2: ^ % √ || */}
-        <Box display="flex" justifyContent="center" gap={1} mb={1}>
-          <Button
-            onClick={() => addToEquation('^')}
-            sx={{
-              minWidth: 64,
-              minHeight: 64,
-              fontSize: '24px',
-              fontWeight: 700,
-              letterSpacing: '0.5px',
-              backgroundColor: colors.keyBackground,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '8px',
-              boxShadow: 'none',
-              '&:hover': {
-                backgroundColor: colors.keyBackgroundHover,
-                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
-                transform: 'translateY(-1px)',
-              },
-              '&:active': {
-                transform: 'translateY(0px)',
-                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
-              },
-              textTransform: 'none',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            ^
-          </Button>
-          <Button
-            onClick={() => addToEquation('%')}
-            sx={{
-              minWidth: 64,
-              minHeight: 64,
-              fontSize: '24px',
-              fontWeight: 700,
-              letterSpacing: '0.5px',
-              backgroundColor: colors.keyBackground,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '8px',
-              boxShadow: 'none',
-              '&:hover': {
-                backgroundColor: colors.keyBackgroundHover,
-                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
-                transform: 'translateY(-1px)',
-              },
-              '&:active': {
-                transform: 'translateY(0px)',
-                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
-              },
-              textTransform: 'none',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            %
-          </Button>
-          <Button
-            onClick={() => addToEquation('√')}
-            sx={{
-              minWidth: 64,
-              minHeight: 64,
-              fontSize: '24px',
-              fontWeight: 700,
-              letterSpacing: '0.5px',
-              backgroundColor: colors.keyBackground,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '8px',
-              boxShadow: 'none',
-              '&:hover': {
-                backgroundColor: colors.keyBackgroundHover,
-                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
-                transform: 'translateY(-1px)',
-              },
-              '&:active': {
-                transform: 'translateY(0px)',
-                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
-              },
-              textTransform: 'none',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            √
-          </Button>
-          <Button
-            onClick={() => addToEquation('|')}
-            sx={{
-              minWidth: 64,
-              minHeight: 64,
-              fontSize: '20px',
-              fontWeight: 700,
-              letterSpacing: '0.5px',
-              backgroundColor: colors.keyBackground,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '8px',
-              boxShadow: 'none',
-              '&:hover': {
-                backgroundColor: colors.keyBackgroundHover,
-                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
-                transform: 'translateY(-1px)',
-              },
-              '&:active': {
-                transform: 'translateY(0px)',
-                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
-              },
-              textTransform: 'none',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            | |
-          </Button>
-        </Box>
-
-        {/* Row 3: ( ) = */}
-        <Box display="flex" justifyContent="center" gap={1} mb={1}>
-          <Button
-            onClick={() => addToEquation('(')}
-            sx={{
-              minWidth: 88,
-              minHeight: 64,
-              fontSize: '24px',
-              fontWeight: 700,
-              letterSpacing: '0.5px',
-              backgroundColor: colors.keyBackground,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '8px',
-              boxShadow: 'none',
-              '&:hover': {
-                backgroundColor: colors.keyBackgroundHover,
-                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
-                transform: 'translateY(-1px)',
-              },
-              '&:active': {
-                transform: 'translateY(0px)',
-                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
-              },
-              textTransform: 'none',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            (
-          </Button>
-          <Button
-            onClick={() => addToEquation(')')}
-            sx={{
-              minWidth: 88,
-              minHeight: 64,
-              fontSize: '24px',
-              fontWeight: 700,
-              letterSpacing: '0.5px',
-              backgroundColor: colors.keyBackground,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '8px',
-              boxShadow: 'none',
-              '&:hover': {
-                backgroundColor: colors.keyBackgroundHover,
-                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
-                transform: 'translateY(-1px)',
-              },
-              '&:active': {
-                transform: 'translateY(0px)',
-                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
-              },
-              textTransform: 'none',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            )
-          </Button>
-          <Button
-            onClick={() => addToEquation('=')}
-            disabled={equation.includes('=')}
-            sx={{
-              minWidth: 88,
-              minHeight: 64,
-              fontSize: '24px',
-              fontWeight: 700,
-              letterSpacing: '0.5px',
-              backgroundColor: colors.keyBackground,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '8px',
-              boxShadow: 'none',
-              opacity: equation.includes('=') ? 0.5 : 1,
-              '&:hover': {
-                backgroundColor: equation.includes('=') ? colors.keyBackground : colors.keyBackgroundHover,
-                boxShadow: equation.includes('=') ? 'none' : `0 2px 8px ${alpha(colors.text, 0.15)}`,
-                transform: equation.includes('=') ? 'none' : 'translateY(-1px)',
-              },
-              '&:active': {
-                transform: equation.includes('=') ? 'none' : 'translateY(0px)',
-                boxShadow: equation.includes('=') ? 'none' : `0 1px 4px ${alpha(colors.text, 0.1)}`,
-              },
-              textTransform: 'none',
-              transition: 'all 0.2s ease',
-              cursor: equation.includes('=') ? 'not-allowed' : 'pointer',
-              '&.Mui-disabled': {
-                color: theme.palette.mode === 'dark' 
-                  ? alpha(colors.text, 0.5) 
-                  : alpha(colors.text, 0.4),
-                backgroundColor: isDarkMode ? '#3A3A3C' : '#E4E4E7',
-              },
-            }}
-          >
-            =
-          </Button>
-        </Box>
+        {/* Dynamic Operator Rows */}
+        {operatorRows.map((row, rowIndex) => (
+          <Box key={rowIndex} display="flex" justifyContent="center" gap={1} mb={1}>
+            {row.operators.map((operator, opIndex) => {
+              const label = row.labels ? row.labels[opIndex] : operator;
+              const isEqualsButton = operator === '=';
+              const isDisabled = isEqualsButton && equation.includes('=');
+              
+              return (
+                <Button
+                  key={operator}
+                  onClick={() => addToEquation(operator)}
+                  disabled={isDisabled}
+                  sx={getOperatorButtonStyles(row.buttonsPerRow, isDisabled)}
+                >
+                  {label}
+                </Button>
+              );
+            })}
+          </Box>
+        ))}
 
         {/* Row 4: clear submit */}
         <Box display="flex" justifyContent="center" gap={3} sx={{ mt: 3 }}>
@@ -555,7 +417,7 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
           </Button>
           <Button
             onClick={validateEquationHandler}
-            disabled={!equation.trim()}
+            disabled={!isEquationReadyForSubmission()}
             sx={{
               minWidth: 140,
               minHeight: 64,

@@ -4,8 +4,8 @@
   "description": "Daily math puzzle game using today's date digits",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#667eea",
-  "theme_color": "#667eea",
+  "background_color": "#e3e6ee",
+  "theme_color": "#e3e6ee",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [

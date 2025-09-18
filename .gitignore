@@ -35,3 +35,24 @@ coverage/
 
 # Cache files
 *.cache
+.eslintcache
+
+# Vitest
+coverage/
+.nyc_output
+
+# OS generated files
+Thumbs.db
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+
+# Build artifacts
+*.tgz
+
+# PWA related
+sw.js
+workbox-*.js

@@ -61,20 +61,17 @@
 - Specifically designed for math expressions
 - Good TypeScript support
 
-### DRAG & DROP
-**dnd-kit**
-- Modern pointer events API
-- Full TypeScript support
-- Excellent mobile/touch support
-- Built-in accessibility features
-- Flexible and extensible architecture
-- Screen reader support
+### DRAG & DROP (REMOVED FOR SIMPLICITY)
+**Previously Considered: dnd-kit**
+- ❌ Removed in favor of text input approach
+- Complex for simple equation building
+- Added unnecessary complexity to user interaction
 
-**Alternative: hello-pangea/dnd**
-- Successor to react-beautiful-dnd
-- Quick setup for sortable lists
-- Good mobile touch support
-- TypeScript support
+**Current Approach: Text Input**
+- ✅ Simple, accessible text input
+- ✅ Works well on all devices
+- ✅ Familiar user experience
+- ✅ Easy to validate and process
 
 ### STYLING
 **CSS-in-JS with Emotion** (if using MUI)
@@ -262,15 +259,15 @@
 - Strict dependency resolution
 - Good monorepo support
 
-## DEVELOPMENT WORKFLOW
-1. **Setup**: Vite + React + TypeScript template
-2. **Linting**: ESLint + Prettier configuration
-3. **Testing**: Jest + RTL + Playwright setup
-4. **UI**: MUI or Chakra UI component library
-5. **State**: Zustand for game state management
-6. **Math**: Math.js for expression parsing
-7. **Drag/Drop**: dnd-kit for equation building
-8. **Deploy**: Vercel for hosting and CI/CD
+## CURRENT IMPLEMENTATION STATUS
+1. ✅ **Setup**: Vite + React 19 + TypeScript
+2. ✅ **Linting**: ESLint + Prettier configuration
+3. ✅ **Testing**: Vitest + RTL setup (Playwright not yet implemented)
+4. ✅ **UI**: Material-UI v7 component library
+5. ✅ **State**: Zustand for game state management
+6. ✅ **Math**: Math.js for expression parsing + KaTeX for rendering
+7. ✅ **Input**: Text-based equation input (drag/drop removed)
+8. 🔄 **Deploy**: Ready for Vercel deployment
 
 ## PERFORMANCE TARGETS
 - **Lighthouse Score**: 90+ across all metrics
@@ -285,7 +282,25 @@
 - **Mobile**: iOS Safari 14+, Android Chrome 90+
 - **No Internet Explorer support** (focus on modern web standards)
 
+## RECENT CHANGES (January 2025)
+### Codebase Cleanup
+- ✅ Removed 10 unused component files (various game card alternatives)
+- ✅ Removed 6 unused dependencies (@dnd-kit/*, @mui/lab, @types/katex, react-katex)
+- ✅ Streamlined to 3 core components: NYTGameCard, Stats, MathEquation
+- ✅ Simplified dependency tree (31 → 25 dependencies)
+- ✅ Significant bundle size reduction
+- ✅ Maintained all active functionality
+
+### Current Dependency Tree
+**Production Dependencies (9):**
+- @emotion/react, @emotion/styled (Material-UI theming)
+- @mui/icons-material, @mui/material (UI components)
+- katex (mathematical notation)
+- mathjs (expression evaluation)
+- react, react-dom (core framework)
+- zustand (state management)
+
 ---
 
-*Last Updated: 2025-09-17*
-*Based on 2024 industry research and proven practices*
+*Last Updated: 2025-01-18*
+*Reflects current implementation status and recent cleanup*

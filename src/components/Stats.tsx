@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { Star, TrendingUp, CheckCircle, Calculate, ArrowBack } from '@mui/icons-material';
 import { useGameStore } from '../stores/gameStore';
+import MathEquation from './MathEquation';
 
 interface StatsProps {
   onBack?: () => void;
@@ -194,16 +195,10 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
                 }}
               >
                 <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography
-                    sx={{
-                      fontFamily: 'monospace',
-                      fontSize: '14px',
-                      color: colors.text,
-                      fontWeight: 500,
-                    }}
-                  >
-                    {solution.equation}
-                  </Typography>
+                  <MathEquation 
+                    equation={solution.equation}
+                    className="math-equation"
+                  />
                   
                   <Box display="flex" alignItems="center" gap={1}>
                     <Typography

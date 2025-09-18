@@ -36,7 +36,14 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
     setEquation,
     setValid,
     addSolution,
+    loadGameState,
+    toggleDarkMode: storeToggleDarkMode,
   } = useGameStore();
+
+  // Load game state on component mount
+  React.useEffect(() => {
+    loadGameState();
+  }, [loadGameState]);
 
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -50,9 +57,9 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
   // NYT-style colors
   // Operator button configuration
   const operatorRows = [
-    { operators: ['+', '-', '*', '/'], buttonsPerRow: 4 },
+    { operators: ['+', '-', '*', '/'], labels: ['+', '-', 'x', '/'], buttonsPerRow: 4 },
     { operators: ['^', '%', 'sqrt(', 'abs('], labels: ['^', '%', '√', '||'], buttonsPerRow: 4 },
-    { operators: ['(', ')', '='], buttonsPerRow: 3 },
+    { operators: ['(', ')', '!', '='], buttonsPerRow: 4 },
   ];
 
   // Calculate dynamic button sizes for perfect alignment
@@ -111,6 +118,13 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
   };
 
   const addToEquation = (value: string) => {
+    // Handle multi-character operations (sqrt, abs) directly
+    if (value === 'sqrt(' || value === 'abs(') {
+      setEquation(equation + value);
+      return;
+    }
+    
+    // For single characters, use the existing validation
     const validation = validateEquationInput(equation, value, currentDate);
     if (validation.isValid) {
       setEquation(equation + value);
@@ -208,6 +222,69 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
             backgroundColor: colors.background,
             minHeight: '100vh',
           }}
+          tabIndex={0}
+          onKeyDown={e => {
+            // Handle keyboard input for typing directly into equation
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (isEquationReadyForSubmission()) {
+                validateEquationHandler();
+              } else {
+                setSnackbarMessage('Equation is not ready for submission.');
+                setSnackbarOpen(true);
+              }
+              return;
+            }
+            
+            if (e.key === 'Backspace') {
+              e.preventDefault();
+              if (equation.length > 0) {
+                setEquation(equation.slice(0, -1));
+              }
+              return;
+            }
+            
+            // Ignore modifier keys
+            if (['Shift', 'Control', 'Alt', 'Meta', 'Tab', 'CapsLock', 'Escape'].includes(e.key)) {
+              return;
+            }
+            
+            // Allow only valid characters
+            const allowedRegex = /^[0-9+\-*/^%()= x!sqrtab]$/;
+            if (!allowedRegex.test(e.key)) {
+              setSnackbarMessage('Only digits and math operators are allowed.');
+              setSnackbarOpen(true);
+              return;
+            }
+            
+            e.preventDefault();
+            const newValue = equation + e.key;
+            
+            // Allow only digits and math operators (no letters)
+            const fullAllowedRegex = /^[0-9+\-*/^%()= x!sqrtab]*$/;
+            if (!fullAllowedRegex.test(newValue)) {
+              setSnackbarMessage('Only use digits and math operators.');
+              setSnackbarOpen(true);
+              return;
+            }
+            
+            // Enforce digit order and only allow each digit once
+            const usedDigits = newValue.match(/\d/g) || [];
+            for (let i = 0; i < usedDigits.length; i++) {
+              if (usedDigits[i] !== digitsArray[i].toString()) {
+                setSnackbarMessage('Use the date digits in order.');
+                setSnackbarOpen(true);
+                return;
+              }
+            }
+            if (usedDigits.length > digitsArray.length) {
+              setSnackbarMessage('You have used too many digits.');
+              setSnackbarOpen(true);
+              return;
+            }
+            
+            setEquation(newValue);
+          }}
         >
           {/* Header - NYT Style */}
           <Box sx={{ position: 'relative', mb: 4 }}>
@@ -230,6 +307,8 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
               {currentDate.replace(/-/g, '/')}
             </Typography>
 
+
+
             {/* Required Digits Display */}
             <Box sx={{ mb: 3 }}>
               <Box display="flex" justifyContent="center" gap={0.5}>
@@ -248,9 +327,6 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
 
                   // Dynamic button sizing for mobile-first design
                   const totalButtons = digitsArray.length;
-                  const availableWidth = 280; // Conservative estimate for iPhone SE
-                  const totalGapWidth = (totalButtons - 1) * 4; // gap={0.5} = 4px
-                  const buttonWidth = Math.max(32, Math.floor((availableWidth - totalGapWidth) / totalButtons));
 
                   return (
                     <Button
@@ -313,7 +389,7 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
                   minHeight: 56,
                   display: 'flex',
                   alignItems: 'center',
-                  backgroundColor: colors.background,
+                  backgroundColor: colors.surfaceLight,
                   position: 'relative',
                 }}
               >
@@ -328,8 +404,8 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
                   }}
                 >
                   {equation || (
-                    <span style={{ color: colors.textLight, fontSize: '16px' }}>
-                      Start with {digitsArray[0]}...
+                    <span style={{ color: colors.textLight, fontSize: '24px' }}>
+                      Input your equation
                     </span>
                   )}
                 </Typography>
@@ -554,7 +630,8 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
             <Divider sx={{ my: 2, borderColor: colors.borderLight }} />
             <ListItemButton
               onClick={() => {
-                toggleDarkMode?.();
+                storeToggleDarkMode();
+                toggleDarkMode?.(); // Call parent toggle if provided
               }}
               sx={{
                 borderRadius: '8px',

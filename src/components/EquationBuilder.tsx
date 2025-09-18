@@ -123,7 +123,7 @@ const EquationBuilder: React.FC = () => {
       <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h6" color="primary">
-            Equation Builder
+            Crackle Date
           </Typography>
           <Box display="flex" gap={1}>
             <Button

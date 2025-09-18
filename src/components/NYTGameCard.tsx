@@ -7,13 +7,20 @@ import {
   useTheme,
   alpha,
   Snackbar,
+  Drawer,
+  List,
+  ListItemIcon,
+  ListItemText,
+  ListItemButton,
+  Divider,
 } from '@mui/material';
-import { Backspace, Close, DarkMode, LightMode } from '@mui/icons-material';
+import { Backspace, Close, Menu, BarChart, Brightness4, Brightness7 } from '@mui/icons-material';
 import { useGameStore } from '../stores/gameStore';
 import { getDateDigits, getDigitsArray } from '../utils/dateUtils';
 import { validateEquationInput, getInputHint } from '../utils/inputValidator';
 import { validateEquation, type ValidationResult } from '../utils/mathValidator';
 import { calculateScore, getScoreDescription } from '../utils/scoring';
+import Stats from './Stats';
 
 interface NYTGameCardProps {
   toggleDarkMode?: () => void;
@@ -29,14 +36,13 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
     setEquation,
     setValid,
     addSolution,
-    score,
-    streak,
-    solutions
   } = useGameStore();
 
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState<'game' | 'stats'>('game');
 
   const dateDigits = getDateDigits(currentDate);
   const digitsArray = getDigitsArray(dateDigits);
@@ -103,7 +109,9 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
 
 
   return (
-    <Box
+    <>
+      {currentPage === 'game' ? (
+        <Box
       sx={{
         maxWidth: 500,
         mx: 'auto',
@@ -126,7 +134,7 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
               mb: 0.5,
             }}
           >
-            Equation Builder
+            Crackle Date
           </Typography>
           <Typography
             sx={{
@@ -138,58 +146,21 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
             {currentDate}
           </Typography>
         </Box>
-        {toggleDarkMode && (
-          <IconButton
-            onClick={toggleDarkMode}
-            sx={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              color: colors.text,
-            }}
-            aria-label="toggle theme"
-          >
-            {isDarkMode ? <LightMode /> : <DarkMode />}
-          </IconButton>
-        )}
+        <IconButton
+          onClick={() => setMenuOpen(true)}
+          sx={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            color: colors.text,
+          }}
+          aria-label="open menu"
+        >
+          <Menu />
+        </IconButton>
       </Box>
 
-      {/* Stats Bar */}
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: 4,
-          mb: 3,
-          pb: 2,
-          borderBottom: `1px solid ${colors.borderLight}`,
-        }}
-      >
-        <Box textAlign="center">
-          <Typography sx={{ fontSize: '20px', fontWeight: 600, color: colors.text }}>
-            {solutions.length}
-          </Typography>
-          <Typography sx={{ fontSize: '12px', color: colors.textLight, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Solved
-          </Typography>
-        </Box>
-        <Box textAlign="center">
-          <Typography sx={{ fontSize: '20px', fontWeight: 600, color: colors.text }}>
-            {score}
-          </Typography>
-          <Typography sx={{ fontSize: '12px', color: colors.textLight, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Score
-          </Typography>
-        </Box>
-        <Box textAlign="center">
-          <Typography sx={{ fontSize: '20px', fontWeight: 600, color: colors.text }}>
-            {streak}
-          </Typography>
-          <Typography sx={{ fontSize: '12px', color: colors.textLight, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Streak
-          </Typography>
-        </Box>
-      </Box>
+
 
       {/* Required Digits Display */}
       <Box sx={{ mb: 3 }}>
@@ -206,7 +177,7 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
         >
           Use these digits in order
         </Typography>
-        <Box display="flex" justifyContent="center" gap={1}>
+        <Box display="flex" justifyContent="center" gap={0.5}>
           {digitsArray.map((digit, index) => {
             const usedDigits: number[] = [];
             const digitMatches = equation.match(/\d/g);
@@ -221,38 +192,34 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
             const isUsed = index < nextExpectedIndex;
 
             return (
-              <Box
+              <Button
                 key={index}
                 onClick={() => isAllowed && addToEquation(digit.toString())}
+                disabled={isUsed || !isAllowed}
                 sx={{
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: `2px solid ${
-                    isUsed ? colors.success :
-                    isAllowed ? colors.text :
-                    colors.border
-                  }`,
+                  minWidth: 43,
+                  height: 58,
+                  fontSize: '20px',
+                  fontWeight: 600,
+                  backgroundColor: isUsed ? colors.success :
+                                   isAllowed ? colors.keyBackground :
+                                   colors.keyBackground,
+                  color: isUsed ? '#FFFFFF' :
+                         isAllowed ? colors.text :
+                         colors.textLight,
+                  border: 'none',
                   borderRadius: '4px',
-                  fontSize: '18px',
-                  fontWeight: 700,
-                  color: isUsed ? colors.success : colors.text,
-                  backgroundColor: isUsed ? alpha(colors.success, 0.1) :
-                                   isAllowed ? colors.hover :
-                                   'transparent',
-                  cursor: isAllowed ? 'pointer' : 'default',
-                  opacity: !isUsed && !isAllowed ? 0.4 : 1,
-                  transition: 'all 0.15s ease',
-                  '&:hover': isAllowed ? {
-                    backgroundColor: colors.hover,
-                    transform: 'scale(1.05)',
+                  opacity: isUsed ? 1 : isAllowed ? 1 : 0.5,
+                  cursor: isUsed ? 'default' : isAllowed ? 'pointer' : 'not-allowed',
+                  '&:hover': isAllowed && !isUsed ? {
+                    backgroundColor: colors.keyBackgroundHover,
                   } : {},
+                  textTransform: 'none',
+                  transition: 'all 0.15s ease',
                 }}
               >
                 {digit}
-              </Box>
+              </Button>
             );
           })}
         </Box>
@@ -307,26 +274,23 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
 
       {/* Keyboard Layout - NYT Style */}
       <Box sx={{ mb: 2 }}>
-        {/* Row 1 - Numbers */}
+        {/* Row 1: + - * / */}
         <Box display="flex" justifyContent="center" gap={0.5} mb={0.5}>
-          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((key) => (
+          {['+', '-', '*', '/'].map((key) => (
             <Button
               key={key}
               onClick={() => addToEquation(key)}
-              disabled
               sx={{
-                minWidth: 43,
+                minWidth: 60,
                 height: 58,
                 fontSize: '20px',
                 fontWeight: 600,
                 backgroundColor: colors.keyBackground,
-                color: colors.textLight,
+                color: colors.text,
                 border: 'none',
                 borderRadius: '4px',
-                opacity: 0.5,
-                cursor: 'not-allowed',
                 '&:hover': {
-                  backgroundColor: colors.keyBackground,
+                  backgroundColor: colors.keyBackgroundHover,
                 },
                 textTransform: 'none',
               }}
@@ -336,45 +300,50 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
           ))}
         </Box>
 
-        {/* Row 2 - Basic Operations */}
+        {/* Row 2: ^ % √ || */}
         <Box display="flex" justifyContent="center" gap={0.5} mb={0.5}>
-          {['+', '-', '*', '/', '=', '(', ')', '^', '%', '!'].map((key) => {
-            const isDisabled = key === '=' && equation.includes('=');
-
-            return (
-              <Button
-                key={key}
-                onClick={() => addToEquation(key)}
-                disabled={isDisabled}
-                sx={{
-                  minWidth: 43,
-                  height: 58,
-                  fontSize: '20px',
-                  fontWeight: 600,
-                  backgroundColor: colors.keyBackground,
-                  color: colors.text,
-                  border: 'none',
-                  borderRadius: '4px',
-                  opacity: isDisabled ? 0.5 : 1,
-                  '&:hover': {
-                    backgroundColor: isDisabled ? colors.keyBackground : colors.keyBackgroundHover,
-                  },
-                  textTransform: 'none',
-                  cursor: isDisabled ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {key}
-              </Button>
-            );
-          })}
-        </Box>
-
-        {/* Row 3 - Special Keys */}
-        <Box display="flex" justifyContent="center" gap={0.5} mb={0.5}>
+          <Button
+            onClick={() => addToEquation('^')}
+            sx={{
+              minWidth: 60,
+              height: 58,
+              fontSize: '20px',
+              fontWeight: 600,
+              backgroundColor: colors.keyBackground,
+              color: colors.text,
+              border: 'none',
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: colors.keyBackgroundHover,
+              },
+              textTransform: 'none',
+            }}
+          >
+            ^
+          </Button>
+          <Button
+            onClick={() => addToEquation('%')}
+            sx={{
+              minWidth: 60,
+              height: 58,
+              fontSize: '20px',
+              fontWeight: 600,
+              backgroundColor: colors.keyBackground,
+              color: colors.text,
+              border: 'none',
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: colors.keyBackgroundHover,
+              },
+              textTransform: 'none',
+            }}
+          >
+            %
+          </Button>
           <Button
             onClick={() => addToEquation('√')}
             sx={{
-              minWidth: 43,
+              minWidth: 60,
               height: 58,
               fontSize: '20px',
               fontWeight: 600,
@@ -393,7 +362,7 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
           <Button
             onClick={() => addToEquation('|')}
             sx={{
-              minWidth: 43,
+              minWidth: 60,
               height: 58,
               fontSize: '20px',
               fontWeight: 600,
@@ -409,12 +378,80 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
           >
             | |
           </Button>
+        </Box>
+
+        {/* Row 3: ( ) = */}
+        <Box display="flex" justifyContent="center" gap={0.5} mb={0.5}>
+          <Button
+            onClick={() => addToEquation('(')}
+            sx={{
+              minWidth: 80,
+              height: 58,
+              fontSize: '20px',
+              fontWeight: 600,
+              backgroundColor: colors.keyBackground,
+              color: colors.text,
+              border: 'none',
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: colors.keyBackgroundHover,
+              },
+              textTransform: 'none',
+            }}
+          >
+            (
+          </Button>
+          <Button
+            onClick={() => addToEquation(')')}
+            sx={{
+              minWidth: 80,
+              height: 58,
+              fontSize: '20px',
+              fontWeight: 600,
+              backgroundColor: colors.keyBackground,
+              color: colors.text,
+              border: 'none',
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: colors.keyBackgroundHover,
+              },
+              textTransform: 'none',
+            }}
+          >
+            )
+          </Button>
+          <Button
+            onClick={() => addToEquation('=')}
+            disabled={equation.includes('=')}
+            sx={{
+              minWidth: 80,
+              height: 58,
+              fontSize: '20px',
+              fontWeight: 600,
+              backgroundColor: colors.keyBackground,
+              color: colors.text,
+              border: 'none',
+              borderRadius: '4px',
+              opacity: equation.includes('=') ? 0.5 : 1,
+              '&:hover': {
+                backgroundColor: equation.includes('=') ? colors.keyBackground : colors.keyBackgroundHover,
+              },
+              textTransform: 'none',
+              cursor: equation.includes('=') ? 'not-allowed' : 'pointer',
+            }}
+          >
+            =
+          </Button>
+        </Box>
+
+        {/* Row 4: space clear enter */}
+        <Box display="flex" justifyContent="center" gap={0.5}>
           <Button
             onClick={() => addToEquation(' ')}
             sx={{
-              minWidth: 65.5,
+              minWidth: 80,
               height: 58,
-              fontSize: '14px',
+              fontSize: '12px',
               fontWeight: 600,
               backgroundColor: colors.keyBackground,
               color: colors.text,
@@ -431,9 +468,9 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
           <Button
             onClick={clearEquation}
             sx={{
-              minWidth: 65.5,
+              minWidth: 80,
               height: 58,
-              fontSize: '14px',
+              fontSize: '12px',
               fontWeight: 600,
               backgroundColor: colors.keyBackground,
               color: colors.text,
@@ -445,14 +482,14 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
               textTransform: 'none',
             }}
           >
-            Clear
+            clear
           </Button>
           <Button
             onClick={validateEquationHandler}
             sx={{
-              minWidth: 65.5,
+              minWidth: 80,
               height: 58,
-              fontSize: '14px',
+              fontSize: '12px',
               fontWeight: 700,
               backgroundColor: colors.success,
               color: '#FFFFFF',
@@ -461,10 +498,10 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
               '&:hover': {
                 backgroundColor: alpha(colors.success, 0.9),
               },
-              textTransform: 'uppercase',
+              textTransform: 'lowercase',
             }}
           >
-            Enter
+            enter
           </Button>
         </Box>
       </Box>
@@ -502,8 +539,118 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
             <Close fontSize="small" />
           </IconButton>
         }
-      />
-    </Box>
+          />
+        </Box>
+      ) : (
+        <Stats onBack={() => setCurrentPage('game')} />
+      )}
+
+      {/* Hamburger Menu Drawer */}
+      <Drawer
+        anchor="right"
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 280,
+            backgroundColor: colors.background,
+            borderLeft: `1px solid ${colors.borderLight}`,
+          },
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 600,
+              color: colors.text,
+              mb: 2,
+            }}
+          >
+            Menu
+          </Typography>
+          
+          <List sx={{ p: 0 }}>
+            <ListItemButton
+              onClick={() => {
+                setCurrentPage('game');
+                setMenuOpen(false);
+              }}
+              sx={{
+                borderRadius: '8px',
+                mb: 1,
+                backgroundColor: currentPage === 'game' ? colors.hover : 'transparent',
+              }}
+            >
+              <ListItemIcon>
+                <Menu sx={{ color: colors.text }} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Game" 
+                sx={{ 
+                  '& .MuiListItemText-primary': { 
+                    color: colors.text,
+                    fontWeight: currentPage === 'game' ? 600 : 400,
+                  } 
+                }} 
+              />
+            </ListItemButton>
+            
+            <ListItemButton
+              onClick={() => {
+                setCurrentPage('stats');
+                setMenuOpen(false);
+              }}
+              sx={{
+                borderRadius: '8px',
+                mb: 1,
+                backgroundColor: currentPage === 'stats' ? colors.hover : 'transparent',
+              }}
+            >
+              <ListItemIcon>
+                <BarChart sx={{ color: colors.text }} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Stats" 
+                sx={{ 
+                  '& .MuiListItemText-primary': { 
+                    color: colors.text,
+                    fontWeight: currentPage === 'stats' ? 600 : 400,
+                  } 
+                }} 
+              />
+            </ListItemButton>
+            
+            <Divider sx={{ my: 2, borderColor: colors.borderLight }} />
+            
+            <ListItemButton
+              onClick={() => {
+                toggleDarkMode?.();
+              }}
+              sx={{
+                borderRadius: '8px',
+              }}
+            >
+              <ListItemIcon>
+                {isDarkMode ? (
+                  <Brightness7 sx={{ color: colors.text }} />
+                ) : (
+                  <Brightness4 sx={{ color: colors.text }} />
+                )}
+              </ListItemIcon>
+              <ListItemText 
+                primary={isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                sx={{ 
+                  '& .MuiListItemText-primary': { 
+                    color: colors.text,
+                  } 
+                }} 
+              />
+            </ListItemButton>
+          </List>
+        </Box>
+      </Drawer>
+    </>
   );
 };
 

@@ -208,7 +208,7 @@ const MaterialGameCard: React.FC = () => {
         </Box>
       </Paper>
 
-      {/* Equation Builder Card */}
+      {/* Crackle Date Card */}
       <Paper
         elevation={isDarkMode ? 4 : 1}
         sx={{

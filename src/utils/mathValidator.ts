@@ -72,18 +72,6 @@ export const validateEquation = (equation: string, currentDate: string): Validat
     // Calculate complexity
     const complexity = calculateComplexity(equation);
 
-    // Check for trivial solutions
-    if (isTrivialSolution(equation)) {
-      return {
-        isValid: false,
-        error: 'Trivial solutions (like multiplying by zero) are not allowed',
-        usesAllDigits: true,
-        digitsInOrder: true,
-        mathematicallyCorrect: true,
-        complexity: 'trivial',
-      };
-    }
-
     return {
       isValid: true,
       usesAllDigits: true,
@@ -210,17 +198,3 @@ const calculateComplexity = (equation: string): ComplexityLevel => {
   return 'advanced';
 };
 
-const isTrivialSolution = (equation: string): boolean => {
-  // Check for common trivial patterns that make the equation too easy
-  const trivialPatterns = [
-    /.*\*\s*0\s*=\s*0.*/, // Multiplying by zero equals zero
-    /.*0\s*\*.*=\s*0.*/, // Zero multiplication equals zero
-    /(\d+)\s*=\s*\1/, // Identity (same number on both sides)
-    /^\s*\d+\s*\+\s*0\s*=\s*\d+\s*$/, // Simple adding zero (like "5 + 0 = 5")
-    /^\s*\d+\s*-\s*0\s*=\s*\d+\s*$/, // Simple subtracting zero (like "5 - 0 = 5")
-    /^\s*\d+\s*\/\s*1\s*=\s*\d+\s*$/, // Simple dividing by one (like "5 / 1 = 5")
-    /^\s*\d+\s*\*\s*1\s*=\s*\d+\s*$/, // Simple multiplying by one (like "5 * 1 = 5")
-  ];
-
-  return trivialPatterns.some(pattern => pattern.test(equation));
-};

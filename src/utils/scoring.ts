@@ -10,7 +10,7 @@ export const calculateScore = (validationResult: ValidationResult): number => {
 
   // Complexity multipliers
   const complexityMultipliers: Record<ComplexityLevel, number> = {
-    trivial: 0, // Trivial solutions get no points
+    trivial: 0.5, // Basic solutions get half points
     simple: 1,
     moderate: 2,
     complex: 4,
@@ -35,11 +35,11 @@ export const calculateScore = (validationResult: ValidationResult): number => {
 
 export const getScoreDescription = (score: number, complexity: ComplexityLevel): string => {
   if (score === 0) {
-    return 'No points - invalid or trivial solution';
+    return 'No points - invalid solution';
   }
 
   const descriptions: Record<ComplexityLevel, string> = {
-    trivial: 'Trivial solution',
+    trivial: 'Basic solution - every start counts!',
     simple: 'Good basic solution!',
     moderate: 'Nice work with moderate complexity!',
     complex: 'Excellent complex solution!',

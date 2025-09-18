@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box } from '@mui/material';
 import { useGameStore } from '../stores/gameStore';
-import { validateEquationInput, getInputHint, filterInput } from '../utils/inputValidator';
+import { validateEquationInput, filterInput } from '../utils/inputValidator';
 import { validateEquation, type ValidationResult } from '../utils/mathValidator';
 import { calculateScore, getScoreDescription } from '../utils/scoring';
 import CompactGameView from './CompactGameView';

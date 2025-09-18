@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   Paper,
@@ -7,79 +7,38 @@ import {
   TextField,
   Alert,
   Chip,
-  Grid,
 } from '@mui/material';
 import { Clear, Calculate, CheckCircle, Info } from '@mui/icons-material';
 import { useGameStore } from '../stores/gameStore';
-import { getDateDigits, getDigitsArray } from '../utils/dateUtils';
-import { validateEquation, type ValidationResult } from '../utils/mathValidator';
-import { calculateScore, getScoreDescription } from '../utils/scoring';
-import { MATH_OPERATIONS } from '../utils/mathOperations';
-import { validateEquationInput, getInputHint, filterInput } from '../utils/inputValidator';
+import { getInputHint } from '../utils/inputValidator';
+import { type ValidationResult } from '../utils/mathValidator';
 
-const SimplifiedEquationBuilder: React.FC = () => {
-  const { currentDate, equation, setEquation, isValid, setValid, addSolution } = useGameStore();
-  const [validationMessage, setValidationMessage] = useState<string>('');
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [showHint, setShowHint] = useState<boolean>(false);
+interface SimplifiedEquationBuilderProps {
+  addToEquation: (value: string) => void;
+  handleTextFieldChange: (newValue: string) => void;
+  clearEquation: () => void;
+  removeLastChar: () => void;
+  validateEquationHandler: () => void;
+  validationMessage: string;
+  validationResult: ValidationResult | null;
+  showHint: boolean;
+  equation: string;
+  isValid: boolean;
+}
 
-  const dateDigits = getDateDigits(currentDate);
-  const digitsArray = getDigitsArray(dateDigits);
-
-  const addToEquation = (value: string) => {
-    const validation = validateEquationInput(equation, value, currentDate);
-    if (validation.isValid) {
-      setEquation(equation + value);
-      setShowHint(false); // Hide hint on successful input
-    } else {
-      // Show hint when user tries wrong digit
-      if (/^\d$/.test(value)) {
-        setShowHint(true);
-        setTimeout(() => setShowHint(false), 4000); // Show for 4 seconds
-      }
-      // Show brief error feedback
-      setValidationMessage(validation.error || 'Invalid input');
-      setTimeout(() => setValidationMessage(''), 2000);
-    }
-  };
-
-  const handleTextFieldChange = (newValue: string) => {
-    // Filter the input to only allow valid characters
-    const filteredValue = filterInput(newValue, '', currentDate);
-    setEquation(filteredValue);
-  };
-
-  const clearEquation = () => {
-    setEquation('');
-    setValidationMessage('');
-    setValidationResult(null);
-    setShowHint(false);
-  };
-
-  const removeLastChar = () => {
-    setEquation(equation.slice(0, -1));
-  };
-
-  const validateEquationHandler = () => {
-    if (!equation) {
-      setValidationMessage('Please build an equation first');
-      setValid(false);
-      return;
-    }
-
-    const result = validateEquation(equation, currentDate);
-    setValidationResult(result);
-    setValid(result.isValid);
-
-    if (result.isValid) {
-      const score = calculateScore(result);
-      const description = getScoreDescription(score, result.complexity);
-      setValidationMessage(description);
-      addSolution(equation, score);
-    } else {
-      setValidationMessage(result.error || 'Invalid equation');
-    }
-  };
+const SimplifiedEquationBuilder: React.FC<SimplifiedEquationBuilderProps> = ({
+  addToEquation,
+  handleTextFieldChange,
+  clearEquation,
+  removeLastChar,
+  validateEquationHandler,
+  validationMessage,
+  validationResult,
+  showHint,
+  equation,
+  isValid,
+}) => {
+  const { currentDate } = useGameStore();
 
   return (
     <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
@@ -150,47 +109,6 @@ const SimplifiedEquationBuilder: React.FC = () => {
           )}
         </Alert>
       )}
-
-      {/* Digits */}
-      <Typography variant="subtitle2" color="text.secondary" mb={1}>
-        Digits (tap to add):
-      </Typography>
-      <Box display="flex" gap={0.5} mb={2} flexWrap="wrap">
-        {digitsArray.map((digit, index) => {
-          // Get how many digits have been used so far
-          const usedDigits: number[] = [];
-          const digitMatches = equation.match(/\d/g);
-          if (digitMatches) {
-            usedDigits.push(...digitMatches.map(d => parseInt(d)));
-          }
-
-          // Check if this specific position is the next one expected
-          const nextExpectedIndex = usedDigits.length;
-          const isThisPositionNext = index === nextExpectedIndex;
-          const validation = validateEquationInput(equation, digit.toString(), currentDate);
-          const isAllowed = validation.isValid && isThisPositionNext;
-
-          return (
-            <Chip
-              key={index}
-              label={digit}
-              onClick={() => addToEquation(digit.toString())}
-              variant={isAllowed ? "outlined" : "filled"}
-              color={isAllowed ? "secondary" : "default"}
-              size="small"
-              sx={{
-                minWidth: 36,
-                cursor: isAllowed ? 'pointer' : 'not-allowed',
-                opacity: isAllowed ? 1 : 0.5,
-                transform: isAllowed ? 'scale(1)' : 'scale(0.95)',
-                transition: 'all 0.2s ease',
-                border: isThisPositionNext && validation.isValid ? '2px solid #667eea' : undefined,
-              }}
-              disabled={!isAllowed}
-            />
-          );
-        })}
-      </Box>
 
       {/* Basic Operators */}
       <Typography variant="subtitle2" color="text.secondary" mb={1}>

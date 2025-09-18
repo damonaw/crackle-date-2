@@ -23,22 +23,31 @@ export const useTheme = () => {
     palette: {
       mode: isDarkMode ? 'dark' : 'light',
       primary: {
-        main: '#667eea',
-        light: '#8fa7eb',
-        dark: '#4a58a3',
+        main: isDarkMode ? '#BB86FC' : '#6200EE',
+        light: isDarkMode ? '#E1BEE7' : '#B388FF',
+        dark: isDarkMode ? '#9C64E8' : '#3700B3',
       },
       secondary: {
-        main: '#764ba2',
-        light: '#9269b5',
-        dark: '#533471',
+        main: isDarkMode ? '#03DAC6' : '#018786',
+        light: isDarkMode ? '#66FFF9' : '#03DAC5',
+        dark: isDarkMode ? '#00A896' : '#00574B',
       },
       background: {
-        default: isDarkMode ? '#121212' : '#f5f5f5',
-        paper: isDarkMode ? '#1e1e1e' : '#ffffff',
+        default: isDarkMode ? '#121212' : '#FAFAFA',
+        paper: isDarkMode ? '#1E1E1E' : '#FFFFFF',
+      },
+      success: {
+        main: isDarkMode ? '#4CAF50' : '#00C853',
+      },
+      warning: {
+        main: isDarkMode ? '#FF9800' : '#FF6D00',
+      },
+      error: {
+        main: '#CF6679',
       },
     },
     typography: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"NYT-Franklin", "Helvetica Neue", "Helvetica", "Arial", sans-serif',
       h1: {
         fontWeight: 700,
       },

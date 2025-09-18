@@ -1,8 +1,7 @@
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline, Box } from '@mui/material';
 import { useTheme } from './hooks/useTheme';
-import GameHeader from './components/GameHeader';
-import GameArea from './components/GameArea';
+import NYTGameCard from './components/NYTGameCard';
 
 function App() {
   const { theme, isDarkMode, toggleDarkMode } = useTheme();
@@ -12,24 +11,13 @@ function App() {
       <CssBaseline />
       <Box sx={{
         minHeight: '100vh',
-        backgroundColor: 'background.default',
+        backgroundColor: isDarkMode ? '#121213' : '#FFFFFF',
         margin: 0,
         padding: 0,
         width: '100%',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
       }}>
-        <GameHeader isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
-
-        <Box sx={{
-          px: 2,
-          py: 2,
-          maxWidth: 'sm',
-          mx: 'auto',
-          width: '100%',
-          boxSizing: 'border-box'
-        }}>
-          <GameArea />
-        </Box>
+        <NYTGameCard toggleDarkMode={toggleDarkMode} />
       </Box>
     </ThemeProvider>
   );

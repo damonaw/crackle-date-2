@@ -11,7 +11,6 @@ export const validateEquationInput = (
   newInput: string,
   currentDate: string
 ): ValidationState => {
-  const fullEquation = currentEquation + newInput;
   const requiredDigits = getDigitsArray(getDateDigits(currentDate));
 
   // Extract digits from current equation

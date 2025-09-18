@@ -13,7 +13,7 @@ import {
   ListItemButton,
   Divider,
 } from '@mui/material';
-import { Backspace, Close, Menu, BarChart, Calculate } from '@mui/icons-material';
+import { Backspace, Close, Menu, BarChart, Calculate, LightMode, DarkMode, SettingsBrightness } from '@mui/icons-material';
 import { RadioGroup, FormControlLabel, Radio } from '@mui/material';
 import { useGameStore } from '../stores/gameStore';
 import { useTheme } from '../hooks/useTheme';
@@ -611,13 +611,14 @@ const CrackleDateCard: React.FC = () => {
               <FormControlLabel
                 value="light"
                 control={<Radio size="small" />}
-                label="Light"
+                label={<Box display="flex" alignItems="center" gap={1}><LightMode fontSize="small"/> Light</Box>}
                 sx={{
                   m: 0,
                   px: 1,
                   py: 0.5,
                   borderRadius: '8px',
                   borderLeft: '3px solid transparent',
+                  transition: 'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
                   '&:hover': { backgroundColor: theme.palette.action.hover },
                   '&:active': {
                     transform: 'translateY(1px)',
@@ -632,13 +633,14 @@ const CrackleDateCard: React.FC = () => {
               <FormControlLabel
                 value="dark"
                 control={<Radio size="small" />}
-                label="Dark"
+                label={<Box display="flex" alignItems="center" gap={1}><DarkMode fontSize="small"/> Dark</Box>}
                 sx={{
                   m: 0,
                   px: 1,
                   py: 0.5,
                   borderRadius: '8px',
                   borderLeft: '3px solid transparent',
+                  transition: 'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
                   '&:hover': { backgroundColor: theme.palette.action.hover },
                   '&:active': {
                     transform: 'translateY(1px)',
@@ -653,13 +655,14 @@ const CrackleDateCard: React.FC = () => {
               <FormControlLabel
                 value="system"
                 control={<Radio size="small" />}
-                label="System"
+                label={<Box display="flex" alignItems="center" gap={1}><SettingsBrightness fontSize="small"/> System</Box>}
                 sx={{
                   m: 0,
                   px: 1,
                   py: 0.5,
                   borderRadius: '8px',
                   borderLeft: '3px solid transparent',
+                  transition: 'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
                   '&:hover': { backgroundColor: theme.palette.action.hover },
                   '&:active': {
                     transform: 'translateY(1px)',

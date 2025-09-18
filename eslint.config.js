@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import { globalIgnores } from 'eslint/config'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', '**/*.css', '**/*.scss', '**/*.svg']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -30,12 +30,11 @@ export default tseslint.config([
       ],
     },
   },
-  // A separate config targeting CSS files via eslint-plugin to catch inline hexes in CSS.
-  // If stylelint is preferred, we can add a stylelint config instead. For now, treat as JS disabled.
+  // Allow hex colors in the theme palette definition file
   {
-    files: ['**/*.{css,scss}'],
+    files: ['src/hooks/useTheme.ts'],
     rules: {
-      // Using regex in comments for awareness; consider adding Stylelint for robust CSS linting.
+      'no-restricted-syntax': 'off',
     },
   },
 ])

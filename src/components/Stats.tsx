@@ -2,13 +2,13 @@ import React from 'react';
 import {
   Box,
   Typography,
-  useTheme,
   Paper,
   Divider,
   IconButton,
 } from '@mui/material';
 import { Star, TrendingUp, CheckCircle, Calculate, ArrowBack } from '@mui/icons-material';
 import { useGameStore } from '../stores/gameStore';
+import { useTheme } from '../hooks/useTheme';
 import MathEquation from './MathEquation';
 
 interface StatsProps {
@@ -16,46 +16,32 @@ interface StatsProps {
 }
 
 const Stats: React.FC<StatsProps> = ({ onBack }) => {
-  const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
+  const { theme } = useTheme();
   const { score, streak, solutions, currentDate } = useGameStore();
 
-  // NYT-style colors
-  const colors = {
-    text: isDarkMode ? '#FFFFFF' : '#121213',
-    textLight: isDarkMode ? '#818384' : '#787C7E',
-    border: isDarkMode ? '#3A3A3C' : '#D3D6DA',
-    borderLight: isDarkMode ? '#3A3A3C' : '#E4E4E7',
-    success: '#6AAA64',
-    warning: '#C9B458',
-    error: '#787C7E',
-    background: isDarkMode ? '#121213' : '#FFFFFF',
-    surfaceLight: isDarkMode ? '#1A1A1B' : '#F7F7F7',
-    hover: isDarkMode ? '#2C2C2E' : '#F0F0F0',
-    keyBackground: isDarkMode ? '#818384' : '#D3D6DA',
-  };
+  // Use theme colors directly for better dark mode reactivity
 
   const statCards = [
     {
-      icon: <CheckCircle sx={{ color: colors.success }} />,
+      icon: <CheckCircle sx={{ color: theme.palette.success.main }} />,
       label: 'Solutions Today',
       value: solutions.length,
       description: `Equations solved for ${currentDate}`,
     },
     {
-      icon: <Star sx={{ color: colors.warning }} />,
+      icon: <Star sx={{ color: theme.palette.warning.main }} />,
       label: 'Total Score',
       value: score,
       description: 'Points earned from all solutions',
     },
     {
-      icon: <TrendingUp sx={{ color: colors.success }} />,
+      icon: <TrendingUp sx={{ color: theme.palette.success.main }} />,
       label: 'Current Streak',
       value: streak,
       description: 'Days with at least one solution',
     },
     {
-      icon: <Calculate sx={{ color: colors.text }} />,
+      icon: <Calculate sx={{ color: theme.palette.text.primary }} />,
       label: 'Average Score',
       value: solutions.length > 0 ? Math.round(score / solutions.length) : 0,
       description: 'Average points per solution',
@@ -69,7 +55,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
         mx: 'auto',
         px: 2,
         py: 3,
-        backgroundColor: colors.background,
+        backgroundColor: theme.palette.background.default,
         minHeight: '100vh',
       }}
     >
@@ -82,7 +68,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
               position: 'absolute',
               top: 0,
               left: 0,
-              color: colors.text,
+              color: theme.palette.text.primary,
             }}
             aria-label="back to game"
           >
@@ -93,10 +79,10 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
         <Typography
           variant="h4"
           sx={{
-            fontFamily: '"NYT-Franklin", "Helvetica Neue", Arial, sans-serif',
+            fontFamily: theme.typography.fontFamily,
             fontWeight: 700,
             letterSpacing: '-0.01em',
-            color: colors.text,
+            color: theme.palette.text.primary,
             mb: 0.5,
             textAlign: 'center',
           }}
@@ -107,7 +93,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
         <Typography
           sx={{
             fontSize: '14px',
-            color: colors.textLight,
+            color: theme.palette.text.secondary,
             fontWeight: 400,
             textAlign: 'center',
           }}
@@ -124,9 +110,9 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
             elevation={0}
             sx={{
               p: 3,
-              backgroundColor: colors.surfaceLight,
+              backgroundColor: theme.palette.background.paper,
               borderRadius: '8px',
-              border: `1px solid ${colors.borderLight}`,
+              border: `1px solid ${theme.palette.divider}`,
             }}
           >
             <Box display="flex" alignItems="center" gap={2} mb={1}>
@@ -135,7 +121,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
                 sx={{
                   fontSize: '16px',
                   fontWeight: 600,
-                  color: colors.text,
+                  color: theme.palette.text.primary,
                 }}
               >
                 {stat.label}
@@ -146,7 +132,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
               sx={{
                 fontSize: '32px',
                 fontWeight: 700,
-                color: colors.text,
+                color: theme.palette.text.primary,
                 mb: 0.5,
               }}
             >
@@ -156,7 +142,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
             <Typography
               sx={{
                 fontSize: '12px',
-                color: colors.textLight,
+                color: theme.palette.text.secondary,
                 lineHeight: 1.4,
               }}
             >
@@ -169,13 +155,13 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
       {/* Solutions History */}
       {solutions.length > 0 && (
         <>
-          <Divider sx={{ my: 3, borderColor: colors.borderLight }} />
+          <Divider sx={{ my: 3, borderColor: theme.palette.divider }} />
           
           <Typography
             variant="h6"
             sx={{
               fontWeight: 600,
-              color: colors.text,
+              color: theme.palette.text.primary,
               mb: 2,
             }}
           >
@@ -189,9 +175,9 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
                 elevation={0}
                 sx={{
                   p: 2,
-                  backgroundColor: colors.surfaceLight,
+                  backgroundColor: theme.palette.background.paper,
                   borderRadius: '4px',
-                  border: `1px solid ${colors.borderLight}`,
+                  border: `1px solid ${theme.palette.divider}`,
                 }}
               >
                 <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -204,7 +190,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
                     <Typography
                       sx={{
                         fontSize: '12px',
-                        color: colors.textLight,
+                        color: theme.palette.text.secondary,
                         textTransform: 'capitalize',
                       }}
                     >
@@ -215,7 +201,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
                       sx={{
                         fontSize: '14px',
                         fontWeight: 600,
-                        color: colors.success,
+                        color: theme.palette.success.main,
                       }}
                     >
                       {solution.score}pts
@@ -233,7 +219,7 @@ const Stats: React.FC<StatsProps> = ({ onBack }) => {
           sx={{
             textAlign: 'center',
             py: 4,
-            color: colors.textLight,
+            color: theme.palette.text.secondary,
           }}
         >
           <Calculate sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />

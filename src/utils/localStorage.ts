@@ -26,9 +26,12 @@ export interface GameData {
   completedToday: boolean;
 }
 
+export type ThemeMode = 'light' | 'dark' | 'system';
+
 export interface UserPreferences {
-  darkMode: boolean;
+  darkMode: boolean; // legacy; kept for backward compatibility
   soundEnabled: boolean;
+  themeMode?: ThemeMode; // new preferred field
 }
 
 const STORAGE_KEYS = {
@@ -46,7 +49,7 @@ export const isLocalStorageAvailable = (): boolean => {
     localStorage.setItem(test, test);
     localStorage.removeItem(test);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 };
@@ -186,13 +189,24 @@ export const getUserPreferences = (): UserPreferences => {
   const defaultPrefs: UserPreferences = {
     darkMode: false,
     soundEnabled: true,
+    themeMode: 'system',
   };
 
-  return loadFromStorage(STORAGE_KEYS.USER_PREFS, defaultPrefs);
+  const prefs = loadFromStorage(STORAGE_KEYS.USER_PREFS, defaultPrefs);
+  if (!prefs.themeMode) {
+    // Derive themeMode from legacy darkMode if missing
+    prefs.themeMode = prefs.darkMode ? 'dark' : 'light';
+  }
+  return prefs;
 };
 
 export const saveUserPreferences = (prefs: UserPreferences): boolean => {
-  return saveToStorage(STORAGE_KEYS.USER_PREFS, prefs);
+  // Keep legacy darkMode flag in sync for older versions
+  const toSave = {
+    ...prefs,
+    darkMode: prefs.themeMode ? prefs.themeMode === 'dark' : prefs.darkMode,
+  };
+  return saveToStorage(STORAGE_KEYS.USER_PREFS, toSave);
 };
 
 /**

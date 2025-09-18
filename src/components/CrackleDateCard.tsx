@@ -4,7 +4,6 @@ import {
   Typography,
   Button,
   IconButton,
-  useTheme,
   alpha,
   Snackbar,
   Drawer,
@@ -14,21 +13,18 @@ import {
   ListItemButton,
   Divider,
 } from '@mui/material';
-import { Backspace, Close, Menu, BarChart, Brightness4, Brightness7, Calculate } from '@mui/icons-material';
+import { Backspace, Close, Menu, BarChart, Calculate } from '@mui/icons-material';
+import { RadioGroup, FormControlLabel, Radio } from '@mui/material';
 import { useGameStore } from '../stores/gameStore';
+import { useTheme } from '../hooks/useTheme';
 import { getDateDigits, getDigitsArray } from '../utils/dateUtils';
 import { validateEquationInput, getInputHint } from '../utils/inputValidator';
 import { validateEquation, type ValidationResult } from '../utils/mathValidator';
 import { calculateScore, getScoreDescription } from '../utils/scoring';
 import Stats from './Stats';
 
-interface NYTGameCardProps {
-  toggleDarkMode?: () => void;
-}
-
-const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
-  const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
+const CrackleDateCard: React.FC = () => {
+  const { theme, isDarkMode, themeMode, setThemeMode } = useTheme();
 
   const {
     currentDate,
@@ -37,7 +33,6 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
     setValid,
     addSolution,
     loadGameState,
-    toggleDarkMode: storeToggleDarkMode,
   } = useGameStore();
 
   // Load game state on component mount
@@ -54,7 +49,7 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
   const dateDigits = getDateDigits(currentDate);
   const digitsArray = getDigitsArray(dateDigits);
 
-  // NYT-style colors
+  // CrackleDate theme colors
   // Operator button configuration
   const operatorRows = [
     { operators: ['+', '-', '*', '/'], labels: ['+', '-', 'x', '/'], buttonsPerRow: 4 },
@@ -78,44 +73,37 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
     fontSize: '24px',
     fontWeight: 700,
     letterSpacing: '0.5px',
-    backgroundColor: isDisabled ? (isDarkMode ? '#3A3A3C' : '#E4E4E7') : colors.keyBackground,
-    color: isDisabled ? (isDarkMode ? '#9CA3AF' : '#6B7280') : colors.text,
+    backgroundColor: isDisabled
+      ? theme.palette.action.disabled
+      : isDarkMode
+        ? theme.palette.grey[800]
+        : theme.palette.grey[300],
+    color: isDisabled
+      ? theme.palette.text.disabled
+      : theme.palette.text.primary,
     border: 'none',
     borderRadius: '8px',
     boxShadow: 'none',
     opacity: isDisabled ? 0.5 : 1,
     cursor: isDisabled ? 'not-allowed' : 'pointer',
     '&:hover': !isDisabled ? {
-      backgroundColor: colors.keyBackgroundHover,
-      boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+      backgroundColor: isDarkMode ? theme.palette.grey[700] : theme.palette.grey[400],
+      boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
       transform: 'translateY(-1px)',
     } : {},
     '&:active': !isDisabled ? {
       transform: 'translateY(0px)',
-      boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
+      boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.1)}`,
     } : {},
     '&.Mui-disabled': {
-      color: isDarkMode ? alpha(colors.text, 0.5) : alpha(colors.text, 0.4),
-      backgroundColor: isDarkMode ? '#3A3A3C' : '#E4E4E7',
+      color: isDarkMode ? alpha(theme.palette.text.primary, 0.5) : alpha(theme.palette.text.primary, 0.4),
+      backgroundColor: theme.palette.action.disabled,
     },
     textTransform: 'none',
     transition: 'all 0.2s ease',
   });
 
-  const colors = {
-    text: isDarkMode ? '#FFFFFF' : '#121213',
-    textLight: isDarkMode ? '#818384' : '#787C7E',
-    border: isDarkMode ? '#3A3A3C' : '#D3D6DA',
-    borderLight: isDarkMode ? '#3A3A3C' : '#E4E4E7',
-    success: '#6AAA64',
-    warning: '#C9B458',
-    error: '#787C7E',
-    background: isDarkMode ? '#121213' : '#FFFFFF',
-    surfaceLight: isDarkMode ? '#1A1A1B' : '#F7F7F7',
-    hover: isDarkMode ? '#2C2C2E' : '#F0F0F0',
-    keyBackground: isDarkMode ? '#818384' : '#D3D6DA',
-    keyBackgroundHover: isDarkMode ? '#565758' : '#C5C8CE',
-  };
+  // Use theme colors directly for better reactivity
 
   const addToEquation = (value: string) => {
     // Handle multi-character operations (sqrt, abs) directly
@@ -219,7 +207,7 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
             mx: 'auto',
             px: 2,
             py: 3,
-            backgroundColor: colors.background,
+            backgroundColor: theme.palette.background.default,
             minHeight: '100vh',
           }}
           tabIndex={0}
@@ -286,110 +274,97 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
             setEquation(newValue);
           }}
         >
-          {/* Header - NYT Style */}
+          {/* Header - CrackleDate Style */}
           <Box sx={{ position: 'relative', mb: 4 }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ position: 'fixed', top: 0, left: 0, width: '100vw', zIndex: 100, mb: 0.5, px: 2, py: 1, borderRadius: 0, backgroundColor: theme.palette.mode === 'dark' ? '#222' : '#e3e6ee' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ position: 'fixed', top: 0, left: 0, width: '100vw', zIndex: 100, mb: 0.5, px: 2, py: 1, borderRadius: 0, backgroundColor: theme.palette.background.paper }}>
               <Box display="flex" alignItems="center">
                 <Calculate sx={{ fontSize: 36, mr: 1 }} />
                 <Typography variant="h5" component="h1" fontWeight={700} letterSpacing={2} sx={{ fontSize: 32 }}>
                   Crackle Date
                 </Typography>
               </Box>
-              <IconButton onClick={() => setMenuOpen(true)} sx={{ ml: 2 }}>
+              <IconButton onClick={() => setMenuOpen(true)} sx={{ ml: 2 }} aria-label="menu">
                 <Menu sx={{ fontSize: 32 }} />
               </IconButton>
             </Box>
           </Box>
 
-          {/* Main Body Section */}
-          <Box sx={{ mt: 8 }}>
-            <Typography variant="subtitle1" sx={{ textAlign: 'center', width: '100%', fontSize: 24, fontWeight: 600, mb: 1 }}>
-              {currentDate.replace(/-/g, '/')}
+          {/* Date Digits */}
+          <Box sx={{ mt: 8, mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ textAlign: 'center', color: theme.palette.text.secondary, mb: 1 }}>
+              {currentDate}
             </Typography>
-
-
-
-            {/* Required Digits Display */}
-            <Box sx={{ mb: 3 }}>
-              <Box display="flex" justifyContent="center" gap={0.5}>
-                {digitsArray.map((digit, index) => {
-                  const usedDigits: number[] = [];
-                  const digitMatches = equation.match(/\d/g);
-                  if (digitMatches) {
-                    usedDigits.push(...digitMatches.map(d => parseInt(d)));
-                  }
-
-                  const nextExpectedIndex = usedDigits.length;
-                  const isThisPositionNext = index === nextExpectedIndex;
-                  const validation = validateEquationInput(equation, digit.toString(), currentDate);
-                  const isAllowed = validation.isValid && isThisPositionNext;
-                  const isUsed = index < nextExpectedIndex;
-
-                  // Dynamic button sizing for mobile-first design
-                  const totalButtons = digitsArray.length;
-
-                  return (
-                    <Button
-                      key={index}
-                      onClick={() => isAllowed && addToEquation(digit.toString())}
-                      disabled={isUsed || !isAllowed}
-                      sx={{
-                        flex: `1 1 0%`,
-                        maxWidth: 64,
-                        minWidth: 32,
-                        width: '100%',
-                        minHeight: 64,
-                        fontSize: totalButtons > 7 ? '18px' : '20px', // Smaller font for longer dates
-                        fontWeight: 700,
-                        letterSpacing: '0.5px',
-                        backgroundColor: isUsed ? colors.success :
-                                         isAllowed ? colors.keyBackground :
-                                         isDarkMode ? '#3A3A3C' : '#E4E4E7',
-                        color: isUsed ? '#FFFFFF' :
-                               isAllowed ? colors.text :
-                               isDarkMode ? '#9CA3AF' : '#6B7280',
-                        border: 'none',
-                        borderRadius: '8px',
-                        boxShadow: isUsed ? `0 2px 8px ${alpha(colors.success, 0.3)}` :
-                                   isAllowed ? 'none' :
-                                   'none',
-                        opacity: isUsed ? 1 : isAllowed ? 1 : 0.5,
-                        cursor: isUsed ? 'default' : isAllowed ? 'pointer' : 'not-allowed',
-                        '&:hover': isAllowed && !isUsed ? {
-                          backgroundColor: colors.keyBackgroundHover,
-                          boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
-                          transform: 'translateY(-1px)',
-                        } : {},
-                        '&:active': isAllowed && !isUsed ? {
-                          transform: 'translateY(0px)',
-                          boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
-                        } : {},
-                        textTransform: 'none',
-                        transition: 'all 0.2s ease',
-                        '&.Mui-disabled': {
-                          color: isUsed ? '#FFFFFF' : isDarkMode ? '#9CA3AF' : '#6B7280',
-                          backgroundColor: isUsed ? colors.success : isDarkMode ? '#3A3A3C' : '#E4E4E7',
-                        },
-                      }}
-                    >
-                      {digit}
-                    </Button>
-                  );
-                })}
-              </Box>
+            <Box display="flex" justifyContent="center" gap={1} mb={3}>
+              {digitsArray.map((digit, index) => {
+                const usedCount = (equation.match(/\d/g) || []).length;
+                const nextExpectedIndex = usedCount;
+                const isUsed = index < nextExpectedIndex;
+                const isAllowed = index === nextExpectedIndex;
+                const totalButtons = digitsArray.length;
+                return (
+                  <Button
+                    key={index}
+                    onClick={() => isAllowed && addToEquation(digit.toString())}
+                    disabled={isUsed || !isAllowed}
+                    sx={{
+                      flex: '1 1 0%',
+                      maxWidth: 64,
+                      minWidth: 32,
+                      width: '100%',
+                      minHeight: 64,
+                      fontSize: totalButtons > 7 ? '18px' : '20px',
+                      fontWeight: 700,
+                      letterSpacing: '0.5px',
+                      backgroundColor: isUsed
+                        ? theme.palette.success.main
+                        : isAllowed
+                          ? (isDarkMode ? theme.palette.grey[800] : theme.palette.grey[300])
+                          : theme.palette.action.disabled,
+                      color: isUsed
+                        ? theme.palette.common.white
+                        : isAllowed
+                          ? theme.palette.text.primary
+                          : theme.palette.text.disabled,
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: isUsed ? `0 2px 8px ${alpha(theme.palette.success.main, 0.3)}` : 'none',
+                      opacity: isUsed ? 1 : isAllowed ? 1 : 0.5,
+                      cursor: isUsed ? 'default' : isAllowed ? 'pointer' : 'not-allowed',
+                      '&:hover': isAllowed && !isUsed ? {
+                        backgroundColor: isDarkMode ? theme.palette.grey[700] : theme.palette.grey[400],
+                        boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
+                        transform: 'translateY(-1px)',
+                      } : {},
+                      '&:active': isAllowed && !isUsed ? {
+                        transform: 'translateY(0px)',
+                        boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.1)}`,
+                      } : {},
+                      textTransform: 'none',
+                      transition: 'all 0.2s ease',
+                      '&.Mui-disabled': {
+                        color: isUsed ? theme.palette.common.white : theme.palette.text.disabled,
+                        backgroundColor: isUsed ? theme.palette.success.main : theme.palette.action.disabled,
+                      },
+                    }}
+                  >
+                    {digit}
+                  </Button>
+                );
+              })}
             </Box>
+          </Box>
 
-            {/* Equation Display */}
+          {/* Equation Display */}
             <Box sx={{ mb: 3 }}>
               <Box
                 sx={{
-                  border: `2px solid ${colors.text}`,
+                  border: `2px solid ${theme.palette.text.primary}`,
                   borderRadius: '4px',
                   p: 2,
                   minHeight: 56,
                   display: 'flex',
                   alignItems: 'center',
-                  backgroundColor: colors.surfaceLight,
+                  backgroundColor: theme.palette.background.paper,
                   position: 'relative',
                 }}
               >
@@ -398,13 +373,13 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
                     fontSize: '24px',
                     fontWeight: 600,
                     fontFamily: 'monospace',
-                    color: colors.text,
+                    color: theme.palette.text.primary,
                     flexGrow: 1,
                     minHeight: '1.5em',
                   }}
                 >
                   {equation || (
-                    <span style={{ color: colors.textLight, fontSize: '24px' }}>
+                    <span style={{ color: theme.palette.text.secondary, fontSize: '24px' }}>
                       Input your equation
                     </span>
                   )}
@@ -414,9 +389,9 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
                     onClick={removeLastChar}
                     size="small"
                     sx={{
-                      color: colors.text,
+                      color: theme.palette.text.primary,
                       '&:hover': {
-                        backgroundColor: colors.hover,
+                        backgroundColor: theme.palette.action.hover,
                       },
                     }}
                   >
@@ -426,7 +401,7 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
               </Box>
             </Box>
 
-            {/* Keyboard Layout - NYT Style */}
+            {/* Keyboard Layout - CrackleDate Style */}
             <Box sx={{ mb: 2 }}>
               {/* Dynamic Operator Rows */}
               {operatorRows.map((row, rowIndex) => (
@@ -460,19 +435,19 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
                     fontSize: '16px',
                     fontWeight: 600,
                     letterSpacing: '0.5px',
-                    backgroundColor: colors.keyBackground,
-                    color: colors.text,
+                    backgroundColor: isDarkMode ? theme.palette.grey[800] : theme.palette.grey[300],
+                    color: theme.palette.text.primary,
                     border: 'none',
                     borderRadius: '8px',
                     boxShadow: 'none',
                     '&:hover': {
-                      backgroundColor: colors.keyBackgroundHover,
-                      boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+                      backgroundColor: isDarkMode ? theme.palette.grey[700] : theme.palette.grey[400],
+                      boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
                       transform: 'translateY(-1px)',
                     },
                     '&:active': {
                       transform: 'translateY(0px)',
-                      boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
+                      boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.1)}`,
                     },
                     textTransform: 'uppercase',
                     transition: 'all 0.2s ease',
@@ -489,27 +464,27 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
                     fontSize: '16px',
                     fontWeight: 700,
                     letterSpacing: '0.5px',
-                    backgroundColor: colors.success,
-                    color: '#FFFFFF',
+                    backgroundColor: theme.palette.success.main,
+                    color: theme.palette.common.white,
                     border: 'none',
                     borderRadius: '8px',
-                    boxShadow: `0 2px 8px ${alpha(colors.success, 0.3)}`,
+                    boxShadow: `0 2px 8px ${alpha(theme.palette.success.main, 0.3)}`,
                     '&:hover': {
-                      backgroundColor: alpha(colors.success, 0.9),
-                      boxShadow: `0 4px 12px ${alpha(colors.success, 0.4)}`,
+                      backgroundColor: alpha(theme.palette.success.main, 0.9),
+                      boxShadow: `0 4px 12px ${alpha(theme.palette.success.main, 0.4)}`,
                       transform: 'translateY(-2px)',
                     },
                     '&:active': {
                       transform: 'translateY(-1px)',
-                      boxShadow: `0 2px 8px ${alpha(colors.success, 0.3)}`,
+                      boxShadow: `0 2px 8px ${alpha(theme.palette.success.main, 0.3)}`,
                     },
                     '&.Mui-disabled': {
                       backgroundColor: theme.palette.mode === 'dark' 
-                        ? alpha(colors.surfaceLight, 0.6) 
-                        : alpha(colors.text, 0.1),
+                        ? alpha(theme.palette.background.paper, 0.6) 
+                        : alpha(theme.palette.text.primary, 0.1),
                       color: theme.palette.mode === 'dark' 
-                        ? alpha(colors.text, 0.5) 
-                        : alpha(colors.text, 0.4),
+                        ? alpha(theme.palette.text.primary, 0.5) 
+                        : alpha(theme.palette.text.primary, 0.4),
                       boxShadow: 'none',
                     },
                     textTransform: 'uppercase',
@@ -529,8 +504,8 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
               anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
               sx={{
                 '& .MuiSnackbarContent-root': {
-                  backgroundColor: validationResult?.isValid ? colors.success : colors.error,
-                  color: '#FFFFFF',
+                  backgroundColor: validationResult?.isValid ? theme.palette.success.main : theme.palette.error.main,
+                  color: theme.palette.common.white,
                   fontSize: '14px',
                   fontWeight: 500,
                   borderRadius: '4px',
@@ -548,7 +523,6 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
                 </IconButton>
               }
             />
-          </Box>
         </Box>
       ) : (
         <Stats onBack={() => setCurrentPage('game')} />
@@ -562,8 +536,8 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
         sx={{
           '& .MuiDrawer-paper': {
             width: 280,
-            backgroundColor: colors.background,
-            borderLeft: `1px solid ${colors.borderLight}`,
+            backgroundColor: theme.palette.background.default,
+            borderLeft: `1px solid ${theme.palette.divider}`,
           },
         }}
       >
@@ -572,7 +546,7 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
             variant="h6"
             sx={{
               fontWeight: 600,
-              color: colors.text,
+              color: theme.palette.text.primary,
               mb: 2,
             }}
           >
@@ -587,17 +561,17 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
               sx={{
                 borderRadius: '8px',
                 mb: 1,
-                backgroundColor: currentPage === 'game' ? colors.hover : 'transparent',
+                backgroundColor: currentPage === 'game' ? theme.palette.action.hover : 'transparent',
               }}
             >
               <ListItemIcon>
-                <Menu sx={{ color: colors.text }} />
+                <Menu sx={{ color: theme.palette.text.primary }} />
               </ListItemIcon>
               <ListItemText 
                 primary="Game" 
                 sx={{ 
                   '& .MuiListItemText-primary': { 
-                    color: colors.text,
+                    color: theme.palette.text.primary,
                     fontWeight: currentPage === 'game' ? 600 : 400,
                   } 
                 }} 
@@ -611,48 +585,93 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
               sx={{
                 borderRadius: '8px',
                 mb: 1,
-                backgroundColor: currentPage === 'stats' ? colors.hover : 'transparent',
+                backgroundColor: currentPage === 'stats' ? theme.palette.action.hover : 'transparent',
               }}
             >
               <ListItemIcon>
-                <BarChart sx={{ color: colors.text }} />
+                <BarChart sx={{ color: theme.palette.text.primary }} />
               </ListItemIcon>
               <ListItemText 
                 primary="Stats" 
                 sx={{ 
                   '& .MuiListItemText-primary': { 
-                    color: colors.text,
+                    color: theme.palette.text.primary,
                     fontWeight: currentPage === 'stats' ? 600 : 400,
                   } 
                 }} 
               />
             </ListItemButton>
-            <Divider sx={{ my: 2, borderColor: colors.borderLight }} />
-            <ListItemButton
-              onClick={() => {
-                storeToggleDarkMode();
-                toggleDarkMode?.(); // Call parent toggle if provided
-              }}
-              sx={{
-                borderRadius: '8px',
-              }}
+            <Divider sx={{ my: 2, borderColor: theme.palette.divider }} />
+            <Typography sx={{ color: theme.palette.text.secondary, fontSize: 12, mb: 1, px: 1 }}>Theme</Typography>
+            <RadioGroup
+              aria-label="Theme"
+              value={themeMode}
+              onChange={(_, value: string) => setThemeMode(value as 'light' | 'dark' | 'system')}
             >
-              <ListItemIcon>
-                {isDarkMode ? (
-                  <Brightness7 sx={{ color: colors.text }} />
-                ) : (
-                  <Brightness4 sx={{ color: colors.text }} />
-                )}
-              </ListItemIcon>
-              <ListItemText 
-                primary={isDarkMode ? 'Light Mode' : 'Dark Mode'}
-                sx={{ 
-                  '& .MuiListItemText-primary': { 
-                    color: colors.text,
-                  } 
-                }} 
+              <FormControlLabel
+                value="light"
+                control={<Radio size="small" />}
+                label="Light"
+                sx={{
+                  m: 0,
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: '8px',
+                  borderLeft: '3px solid transparent',
+                  '&:hover': { backgroundColor: theme.palette.action.hover },
+                  '&:active': {
+                    transform: 'translateY(1px)',
+                    boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.12)}`,
+                  },
+                  ...(themeMode === 'light' && {
+                    backgroundColor: `${alpha(theme.palette.primary.main, 0.12)} !important`,
+                    borderLeftColor: `${theme.palette.primary.main} !important`,
+                  }),
+                }}
               />
-            </ListItemButton>
+              <FormControlLabel
+                value="dark"
+                control={<Radio size="small" />}
+                label="Dark"
+                sx={{
+                  m: 0,
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: '8px',
+                  borderLeft: '3px solid transparent',
+                  '&:hover': { backgroundColor: theme.palette.action.hover },
+                  '&:active': {
+                    transform: 'translateY(1px)',
+                    boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.12)}`,
+                  },
+                  ...(themeMode === 'dark' && {
+                    backgroundColor: `${alpha(theme.palette.primary.main, 0.12)} !important`,
+                    borderLeftColor: `${theme.palette.primary.main} !important`,
+                  }),
+                }}
+              />
+              <FormControlLabel
+                value="system"
+                control={<Radio size="small" />}
+                label="System"
+                sx={{
+                  m: 0,
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: '8px',
+                  borderLeft: '3px solid transparent',
+                  '&:hover': { backgroundColor: theme.palette.action.hover },
+                  '&:active': {
+                    transform: 'translateY(1px)',
+                    boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.12)}`,
+                  },
+                  ...(themeMode === 'system' && {
+                    backgroundColor: `${alpha(theme.palette.primary.main, 0.12)} !important`,
+                    borderLeftColor: `${theme.palette.primary.main} !important`,
+                  }),
+                }}
+              />
+            </RadioGroup>
           </List>
         </Box>
       </Drawer>
@@ -660,4 +679,4 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
   );
 };
 
-export default NYTGameCard;
+export default CrackleDateCard;

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { parse } from 'mathjs';
+import { useTheme } from '../hooks/useTheme';
 
 // KaTeX type declaration
 declare global {
@@ -30,6 +31,7 @@ const MathEquation: React.FC<MathEquationProps> = ({
   displayMode = false, 
   className = '' 
 }) => {
+  const { theme } = useTheme();
   const mathRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -42,7 +44,7 @@ const MathEquation: React.FC<MathEquationProps> = ({
         window.katex.render(latexEquation, element, {
           displayMode,
           throwOnError: false,
-          errorColor: '#cc0000',
+          errorColor: theme.palette.error.main,
           strict: false,
         });
         return;
@@ -52,7 +54,7 @@ const MathEquation: React.FC<MathEquationProps> = ({
     }
 
     element.innerHTML = formatMathFallback(equation);
-  }, [equation, displayMode]);
+  }, [equation, displayMode, theme.palette.error.main]);
 
   return <span ref={mathRef} className={className} />;
 };

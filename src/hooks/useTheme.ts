@@ -1,23 +1,27 @@
-import { useState, useEffect } from 'react';
+
 import { createTheme, type Theme } from '@mui/material/styles';
+import { useEffect } from 'react';
+import { useGameStore } from '../stores/gameStore';
 
 export const useTheme = () => {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem('crackle-date-theme');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    // Default to system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  const themeMode = useGameStore((s) => s.themeMode);
+  const setThemeMode = useGameStore((s) => s.setThemeMode);
+  const toggleDarkMode = useGameStore((s) => s.toggleDarkMode);
 
+  // Resolve system preference if needed
+  const prefersDark = typeof window !== 'undefined'
+    ? window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    : false;
+  const isDarkMode = themeMode === 'system' ? prefersDark : themeMode === 'dark';
+
+  // Keep reacting to system changes when in system mode
   useEffect(() => {
-    localStorage.setItem('crackle-date-theme', JSON.stringify(isDarkMode));
-  }, [isDarkMode]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => !prev);
-  };
+    if (themeMode !== 'system') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => setThemeMode('system');
+    mq.addEventListener?.('change', handler);
+    return () => mq.removeEventListener?.('change', handler);
+  }, [themeMode, setThemeMode]);
 
   const theme: Theme = createTheme({
     palette: {
@@ -47,7 +51,7 @@ export const useTheme = () => {
       },
     },
     typography: {
-      fontFamily: '"NYT-Franklin", "Helvetica Neue", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica Neue", "Arial", sans-serif',
       h1: {
         fontWeight: 700,
       },
@@ -95,5 +99,7 @@ export const useTheme = () => {
     theme,
     isDarkMode,
     toggleDarkMode,
+    themeMode,
+    setThemeMode,
   };
 };

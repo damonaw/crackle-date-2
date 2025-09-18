@@ -8,7 +8,7 @@ import {
   updateGameStats,
   getUserPreferences,
   saveUserPreferences,
-  type GameStats 
+  type GameStats, type ThemeMode 
 } from '../utils/localStorage';
 
 interface GameStore extends GameState {
@@ -30,6 +30,8 @@ interface GameStore extends GameState {
   // User preferences
   darkMode: boolean;
   toggleDarkMode: () => void;
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
 }
 
 const initialState: GameState = {
@@ -47,6 +49,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // Initialize stats and preferences
   gameStats: getGameStats(),
   darkMode: getUserPreferences().darkMode,
+  themeMode: getUserPreferences().themeMode || 'system',
 
   setEquation: (equation: string) => {
     set({ equation });
@@ -95,6 +98,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       currentDate: getTodaysGameDate(),
       gameStats: get().gameStats, // Preserve stats
       darkMode: get().darkMode, // Preserve preferences
+      themeMode: get().themeMode,
     });
     get().saveGameState();
   },
@@ -134,6 +138,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ 
       gameStats: getGameStats(),
       darkMode: getUserPreferences().darkMode,
+      themeMode: getUserPreferences().themeMode || 'system',
     });
   },
 
@@ -159,10 +164,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   toggleDarkMode: () => {
     const newDarkMode = !get().darkMode;
-    set({ darkMode: newDarkMode });
+    set({ darkMode: newDarkMode, themeMode: newDarkMode ? 'dark' : 'light' });
     
     // Save preference
     const prefs = getUserPreferences();
-    saveUserPreferences({ ...prefs, darkMode: newDarkMode });
+    saveUserPreferences({ ...prefs, darkMode: newDarkMode, themeMode: newDarkMode ? 'dark' : 'light' });
+  },
+  setThemeMode: (mode: ThemeMode) => {
+    const dark = mode === 'dark' ? true : mode === 'light' ? false : get().darkMode;
+    set({ themeMode: mode, darkMode: dark });
+    const prefs = getUserPreferences();
+    saveUserPreferences({ ...prefs, themeMode: mode, darkMode: dark });
   },
 }));

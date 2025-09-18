@@ -164,19 +164,6 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
 
       {/* Required Digits Display */}
       <Box sx={{ mb: 3 }}>
-        <Typography
-          sx={{
-            fontSize: '11px',
-            fontWeight: 600,
-            color: colors.textLight,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            mb: 1,
-            textAlign: 'center',
-          }}
-        >
-          Use these digits in order
-        </Typography>
         <Box display="flex" justifyContent="center" gap={0.5}>
           {digitsArray.map((digit, index) => {
             const usedDigits: number[] = [];
@@ -197,25 +184,39 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
                 onClick={() => isAllowed && addToEquation(digit.toString())}
                 disabled={isUsed || !isAllowed}
                 sx={{
-                  minWidth: 43,
-                  height: 58,
+                  minWidth: 48,
+                  minHeight: 64,
                   fontSize: '20px',
-                  fontWeight: 600,
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
                   backgroundColor: isUsed ? colors.success :
                                    isAllowed ? colors.keyBackground :
-                                   colors.keyBackground,
+                                   isDarkMode ? '#3A3A3C' : '#E4E4E7',
                   color: isUsed ? '#FFFFFF' :
                          isAllowed ? colors.text :
-                         colors.textLight,
+                         isDarkMode ? '#9CA3AF' : '#6B7280',
                   border: 'none',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
+                  boxShadow: isUsed ? `0 2px 8px ${alpha(colors.success, 0.3)}` :
+                             isAllowed ? 'none' :
+                             'none',
                   opacity: isUsed ? 1 : isAllowed ? 1 : 0.5,
                   cursor: isUsed ? 'default' : isAllowed ? 'pointer' : 'not-allowed',
                   '&:hover': isAllowed && !isUsed ? {
                     backgroundColor: colors.keyBackgroundHover,
+                    boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+                    transform: 'translateY(-1px)',
+                  } : {},
+                  '&:active': isAllowed && !isUsed ? {
+                    transform: 'translateY(0px)',
+                    boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
                   } : {},
                   textTransform: 'none',
-                  transition: 'all 0.15s ease',
+                  transition: 'all 0.2s ease',
+                  '&.Mui-disabled': {
+                    color: isUsed ? '#FFFFFF' : isDarkMode ? '#9CA3AF' : '#6B7280',
+                    backgroundColor: isUsed ? colors.success : isDarkMode ? '#3A3A3C' : '#E4E4E7',
+                  },
                 }}
               >
                 {digit}
@@ -275,24 +276,33 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
       {/* Keyboard Layout - NYT Style */}
       <Box sx={{ mb: 2 }}>
         {/* Row 1: + - * / */}
-        <Box display="flex" justifyContent="center" gap={0.5} mb={0.5}>
+        <Box display="flex" justifyContent="center" gap={1} mb={1}>
           {['+', '-', '*', '/'].map((key) => (
             <Button
               key={key}
               onClick={() => addToEquation(key)}
               sx={{
-                minWidth: 60,
-                height: 58,
-                fontSize: '20px',
-                fontWeight: 600,
+                minWidth: 64,
+                minHeight: 64,
+                fontSize: '24px',
+                fontWeight: 700,
+                letterSpacing: '0.5px',
                 backgroundColor: colors.keyBackground,
                 color: colors.text,
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '8px',
+                boxShadow: 'none',
                 '&:hover': {
                   backgroundColor: colors.keyBackgroundHover,
+                  boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+                  transform: 'translateY(-1px)',
+                },
+                '&:active': {
+                  transform: 'translateY(0px)',
+                  boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
                 },
                 textTransform: 'none',
+                transition: 'all 0.2s ease',
               }}
             >
               {key}
@@ -301,22 +311,31 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
         </Box>
 
         {/* Row 2: ^ % √ || */}
-        <Box display="flex" justifyContent="center" gap={0.5} mb={0.5}>
+        <Box display="flex" justifyContent="center" gap={1} mb={1}>
           <Button
             onClick={() => addToEquation('^')}
             sx={{
-              minWidth: 60,
-              height: 58,
-              fontSize: '20px',
-              fontWeight: 600,
+              minWidth: 64,
+              minHeight: 64,
+              fontSize: '24px',
+              fontWeight: 700,
+              letterSpacing: '0.5px',
               backgroundColor: colors.keyBackground,
               color: colors.text,
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
+              boxShadow: 'none',
               '&:hover': {
                 backgroundColor: colors.keyBackgroundHover,
+                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+                transform: 'translateY(-1px)',
+              },
+              '&:active': {
+                transform: 'translateY(0px)',
+                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
               },
               textTransform: 'none',
+              transition: 'all 0.2s ease',
             }}
           >
             ^
@@ -324,18 +343,27 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
           <Button
             onClick={() => addToEquation('%')}
             sx={{
-              minWidth: 60,
-              height: 58,
-              fontSize: '20px',
-              fontWeight: 600,
+              minWidth: 64,
+              minHeight: 64,
+              fontSize: '24px',
+              fontWeight: 700,
+              letterSpacing: '0.5px',
               backgroundColor: colors.keyBackground,
               color: colors.text,
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
+              boxShadow: 'none',
               '&:hover': {
                 backgroundColor: colors.keyBackgroundHover,
+                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+                transform: 'translateY(-1px)',
+              },
+              '&:active': {
+                transform: 'translateY(0px)',
+                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
               },
               textTransform: 'none',
+              transition: 'all 0.2s ease',
             }}
           >
             %
@@ -343,18 +371,27 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
           <Button
             onClick={() => addToEquation('√')}
             sx={{
-              minWidth: 60,
-              height: 58,
-              fontSize: '20px',
-              fontWeight: 600,
+              minWidth: 64,
+              minHeight: 64,
+              fontSize: '24px',
+              fontWeight: 700,
+              letterSpacing: '0.5px',
               backgroundColor: colors.keyBackground,
               color: colors.text,
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
+              boxShadow: 'none',
               '&:hover': {
                 backgroundColor: colors.keyBackgroundHover,
+                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+                transform: 'translateY(-1px)',
+              },
+              '&:active': {
+                transform: 'translateY(0px)',
+                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
               },
               textTransform: 'none',
+              transition: 'all 0.2s ease',
             }}
           >
             √
@@ -362,18 +399,27 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
           <Button
             onClick={() => addToEquation('|')}
             sx={{
-              minWidth: 60,
-              height: 58,
+              minWidth: 64,
+              minHeight: 64,
               fontSize: '20px',
-              fontWeight: 600,
+              fontWeight: 700,
+              letterSpacing: '0.5px',
               backgroundColor: colors.keyBackground,
               color: colors.text,
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
+              boxShadow: 'none',
               '&:hover': {
                 backgroundColor: colors.keyBackgroundHover,
+                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+                transform: 'translateY(-1px)',
+              },
+              '&:active': {
+                transform: 'translateY(0px)',
+                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
               },
               textTransform: 'none',
+              transition: 'all 0.2s ease',
             }}
           >
             | |
@@ -381,22 +427,31 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
         </Box>
 
         {/* Row 3: ( ) = */}
-        <Box display="flex" justifyContent="center" gap={0.5} mb={0.5}>
+        <Box display="flex" justifyContent="center" gap={1} mb={1}>
           <Button
             onClick={() => addToEquation('(')}
             sx={{
-              minWidth: 80,
-              height: 58,
-              fontSize: '20px',
-              fontWeight: 600,
+              minWidth: 88,
+              minHeight: 64,
+              fontSize: '24px',
+              fontWeight: 700,
+              letterSpacing: '0.5px',
               backgroundColor: colors.keyBackground,
               color: colors.text,
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
+              boxShadow: 'none',
               '&:hover': {
                 backgroundColor: colors.keyBackgroundHover,
+                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+                transform: 'translateY(-1px)',
+              },
+              '&:active': {
+                transform: 'translateY(0px)',
+                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
               },
               textTransform: 'none',
+              transition: 'all 0.2s ease',
             }}
           >
             (
@@ -404,18 +459,27 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
           <Button
             onClick={() => addToEquation(')')}
             sx={{
-              minWidth: 80,
-              height: 58,
-              fontSize: '20px',
-              fontWeight: 600,
+              minWidth: 88,
+              minHeight: 64,
+              fontSize: '24px',
+              fontWeight: 700,
+              letterSpacing: '0.5px',
               backgroundColor: colors.keyBackground,
               color: colors.text,
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
+              boxShadow: 'none',
               '&:hover': {
                 backgroundColor: colors.keyBackgroundHover,
+                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+                transform: 'translateY(-1px)',
+              },
+              '&:active': {
+                transform: 'translateY(0px)',
+                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
               },
               textTransform: 'none',
+              transition: 'all 0.2s ease',
             }}
           >
             )
@@ -424,93 +488,110 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
             onClick={() => addToEquation('=')}
             disabled={equation.includes('=')}
             sx={{
-              minWidth: 80,
-              height: 58,
-              fontSize: '20px',
-              fontWeight: 600,
+              minWidth: 88,
+              minHeight: 64,
+              fontSize: '24px',
+              fontWeight: 700,
+              letterSpacing: '0.5px',
               backgroundColor: colors.keyBackground,
               color: colors.text,
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
+              boxShadow: 'none',
               opacity: equation.includes('=') ? 0.5 : 1,
               '&:hover': {
                 backgroundColor: equation.includes('=') ? colors.keyBackground : colors.keyBackgroundHover,
+                boxShadow: equation.includes('=') ? 'none' : `0 2px 8px ${alpha(colors.text, 0.15)}`,
+                transform: equation.includes('=') ? 'none' : 'translateY(-1px)',
+              },
+              '&:active': {
+                transform: equation.includes('=') ? 'none' : 'translateY(0px)',
+                boxShadow: equation.includes('=') ? 'none' : `0 1px 4px ${alpha(colors.text, 0.1)}`,
               },
               textTransform: 'none',
+              transition: 'all 0.2s ease',
               cursor: equation.includes('=') ? 'not-allowed' : 'pointer',
+              '&.Mui-disabled': {
+                color: theme.palette.mode === 'dark' 
+                  ? alpha(colors.text, 0.5) 
+                  : alpha(colors.text, 0.4),
+                backgroundColor: isDarkMode ? '#3A3A3C' : '#E4E4E7',
+              },
             }}
           >
             =
           </Button>
         </Box>
 
-        {/* Row 4: space clear enter */}
-        <Box display="flex" justifyContent="center" gap={0.5}>
-          <Button
-            onClick={() => addToEquation(' ')}
-            sx={{
-              minWidth: 80,
-              height: 58,
-              fontSize: '12px',
-              fontWeight: 600,
-              backgroundColor: colors.keyBackground,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '4px',
-              '&:hover': {
-                backgroundColor: colors.keyBackgroundHover,
-              },
-              textTransform: 'none',
-            }}
-          >
-            space
-          </Button>
+        {/* Row 4: clear submit */}
+        <Box display="flex" justifyContent="center" gap={3} sx={{ mt: 3 }}>
           <Button
             onClick={clearEquation}
             sx={{
-              minWidth: 80,
-              height: 58,
-              fontSize: '12px',
+              minWidth: 140,
+              minHeight: 64,
+              fontSize: '16px',
               fontWeight: 600,
+              letterSpacing: '0.5px',
               backgroundColor: colors.keyBackground,
               color: colors.text,
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
+              boxShadow: 'none',
               '&:hover': {
                 backgroundColor: colors.keyBackgroundHover,
+                boxShadow: `0 2px 8px ${alpha(colors.text, 0.15)}`,
+                transform: 'translateY(-1px)',
               },
-              textTransform: 'none',
+              '&:active': {
+                transform: 'translateY(0px)',
+                boxShadow: `0 1px 4px ${alpha(colors.text, 0.1)}`,
+              },
+              textTransform: 'uppercase',
+              transition: 'all 0.2s ease',
             }}
           >
-            clear
+            Clear
           </Button>
           <Button
             onClick={validateEquationHandler}
+            disabled={!equation.trim()}
             sx={{
-              minWidth: 80,
-              height: 58,
-              fontSize: '12px',
+              minWidth: 140,
+              minHeight: 64,
+              fontSize: '16px',
               fontWeight: 700,
+              letterSpacing: '0.5px',
               backgroundColor: colors.success,
               color: '#FFFFFF',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
+              boxShadow: `0 2px 8px ${alpha(colors.success, 0.3)}`,
               '&:hover': {
                 backgroundColor: alpha(colors.success, 0.9),
+                boxShadow: `0 4px 12px ${alpha(colors.success, 0.4)}`,
+                transform: 'translateY(-2px)',
               },
-              textTransform: 'lowercase',
+              '&:active': {
+                transform: 'translateY(-1px)',
+                boxShadow: `0 2px 8px ${alpha(colors.success, 0.3)}`,
+              },
+              '&.Mui-disabled': {
+                backgroundColor: theme.palette.mode === 'dark' 
+                  ? alpha(colors.surfaceLight, 0.6) 
+                  : alpha(colors.text, 0.1),
+                color: theme.palette.mode === 'dark' 
+                  ? alpha(colors.text, 0.5) 
+                  : alpha(colors.text, 0.4),
+                boxShadow: 'none',
+              },
+              textTransform: 'uppercase',
+              transition: 'all 0.2s ease',
             }}
           >
-            enter
+            Submit
           </Button>
         </Box>
-      </Box>
-
-      {/* Help Text */}
-      <Box sx={{ textAlign: 'center', mt: 3 }}>
-        <Typography sx={{ fontSize: '12px', color: colors.textLight }}>
-          Type freely • Invalid characters filtered • Press Enter to check
-        </Typography>
       </Box>
 
       {/* Snackbar for messages */}

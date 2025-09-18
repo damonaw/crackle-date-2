@@ -1,7 +1,7 @@
 import type { DateDigits } from '../types/game';
 
 export const getCurrentDateEST = (): Date => {
-  const now = new Date();
+  const now = new Date(2025, 9, 10);
   // Convert to EST (UTC-5) or EDT (UTC-4) automatically
   const estOffset = -5 * 60; // EST is UTC-5
   const utc = now.getTime() + (now.getTimezoneOffset() * 60000);

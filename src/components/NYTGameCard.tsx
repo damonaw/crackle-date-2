@@ -14,7 +14,7 @@ import {
   ListItemButton,
   Divider,
 } from '@mui/material';
-import { Backspace, Close, Menu, BarChart, Brightness4, Brightness7 } from '@mui/icons-material';
+import { Backspace, Close, Menu, BarChart, Brightness4, Brightness7, Calculate } from '@mui/icons-material';
 import { useGameStore } from '../stores/gameStore';
 import { getDateDigits, getDigitsArray } from '../utils/dateUtils';
 import { validateEquationInput, getInputHint } from '../utils/inputValidator';
@@ -211,19 +211,18 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
     >
       {/* Header - NYT Style */}
       <Box sx={{ position: 'relative', mb: 4 }}>
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography
-            variant="h4"
-            sx={{
-              fontFamily: '"NYT-Franklin", "Helvetica Neue", Arial, sans-serif',
-              fontWeight: 700,
-              letterSpacing: '-0.01em',
-              color: colors.text,
-              mb: 0.5,
-            }}
-          >
-            Crackle Date
-          </Typography>
+        <Box sx={{ textAlign: 'left' }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mt: 1, mb: 1 }}>
+            <Box display="flex" alignItems="center">
+              <Calculate sx={{ fontSize: 36, mr: 1 }} />
+              <Typography variant="h5" component="h1" fontWeight={700} letterSpacing={2} sx={{ fontSize: 32 }}>
+                Crackle Date
+              </Typography>
+            </Box>
+            <IconButton onClick={() => setMenuOpen(true)} sx={{ ml: 2 }}>
+              <Menu sx={{ fontSize: 32 }} />
+            </IconButton>
+          </Box>
           <Typography
             sx={{
               fontSize: '14px',
@@ -234,18 +233,6 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
             {currentDate}
           </Typography>
         </Box>
-        <IconButton
-          onClick={() => setMenuOpen(true)}
-          sx={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            color: colors.text,
-          }}
-          aria-label="open menu"
-        >
-          <Menu />
-        </IconButton>
       </Box>
 
 
@@ -266,15 +253,24 @@ const NYTGameCard: React.FC<NYTGameCardProps> = ({ toggleDarkMode }) => {
             const isAllowed = validation.isValid && isThisPositionNext;
             const isUsed = index < nextExpectedIndex;
 
+            // Dynamic button sizing for mobile-first design
+            const totalButtons = digitsArray.length;
+            const availableWidth = 280; // Conservative estimate for iPhone SE
+            const totalGapWidth = (totalButtons - 1) * 4; // gap={0.5} = 4px
+            const buttonWidth = Math.max(32, Math.floor((availableWidth - totalGapWidth) / totalButtons));
+
             return (
               <Button
                 key={index}
                 onClick={() => isAllowed && addToEquation(digit.toString())}
                 disabled={isUsed || !isAllowed}
                 sx={{
-                  minWidth: 48,
+                  flex: `1 1 0%`,
+                  maxWidth: 64,
+                  minWidth: 32,
+                  width: '100%',
                   minHeight: 64,
-                  fontSize: '20px',
+                  fontSize: totalButtons > 7 ? '18px' : '20px', // Smaller font for longer dates
                   fontWeight: 700,
                   letterSpacing: '0.5px',
                   backgroundColor: isUsed ? colors.success :

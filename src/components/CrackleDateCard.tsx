@@ -363,72 +363,74 @@ const CrackleDateCard: React.FC = () => {
               {currentDate}
             </Typography>
             <Box display="flex" justifyContent="center" gap={1} mb={3}>
-              {digitsArray.map((digit, index) => {
+              {(() => {
                 const usedCount = (equation.match(/\d/g) || []).length;
-                const nextExpectedIndex = usedCount;
-                const isUsed = index < nextExpectedIndex;
-                const isAllowed = index === nextExpectedIndex;
                 const totalButtons = digitsArray.length;
-                return (
-                  <Button
-                    key={index}
-                    onClick={() => isAllowed && addToEquation(digit.toString())}
-                    disabled={isUsed || !isAllowed}
-                    sx={{
-                      flex: '1 1 0%',
-                      maxWidth: 64,
-                      minWidth: 32,
-                      width: '100%',
-                      minHeight: 64,
-                      fontSize: totalButtons > 7 ? '18px' : '20px',
-                      fontWeight: 700,
-                      letterSpacing: '0.5px',
-                      backgroundColor: isUsed
-                        ? theme.palette.primary.main
-                        : isAllowed
-                          ? theme.palette.primary.subtle
-                          : theme.palette.action.disabled,
-                      color: isUsed
-                        ? theme.palette.common.white
-                        : isAllowed
-                          ? theme.palette.text.primary
-                          : theme.palette.text.disabled,
-                      border: 'none',
-                      borderRadius: '8px',
-                      boxShadow: isUsed
-                        ? `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`
-                        : 'none',
-                      opacity: isUsed ? 1 : isAllowed ? 1 : 0.5,
-                      cursor: isUsed ? 'default' : isAllowed ? 'pointer' : 'not-allowed',
-                      '&:hover':
-                        isAllowed && !isUsed
-                          ? {
-                              backgroundColor: theme.palette.primary.hover,
-                              boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.15)}`,
-                              transform: 'translateY(-1px)',
-                            }
-                          : {},
-                      '&:active':
-                        isAllowed && !isUsed
-                          ? {
-                              transform: 'translateY(0px)',
-                              boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.1)}`,
-                            }
-                          : {},
-                      textTransform: 'none',
-                      transition: 'all 0.2s ease',
-                      '&.Mui-disabled': {
-                        color: isUsed ? theme.palette.common.white : theme.palette.text.disabled,
+                return digitsArray.map((digit, index) => {
+                  const nextExpectedIndex = usedCount;
+                  const isUsed = index < nextExpectedIndex;
+                  const isAllowed = index === nextExpectedIndex;
+                  return (
+                    <Button
+                      key={index}
+                      onClick={() => isAllowed && addToEquation(digit.toString())}
+                      disabled={isUsed || !isAllowed}
+                      sx={{
+                        flex: '1 1 0%',
+                        maxWidth: 64,
+                        minWidth: 32,
+                        width: '100%',
+                        minHeight: 64,
+                        fontSize: totalButtons > 7 ? '18px' : '20px',
+                        fontWeight: 700,
+                        letterSpacing: '0.5px',
                         backgroundColor: isUsed
                           ? theme.palette.primary.main
-                          : theme.palette.action.disabled,
-                      },
-                    }}
-                  >
-                    {digit}
-                  </Button>
-                );
-              })}
+                          : isAllowed
+                            ? theme.palette.primary.subtle
+                            : theme.palette.action.disabled,
+                        color: isUsed
+                          ? theme.palette.common.white
+                          : isAllowed
+                            ? theme.palette.text.primary
+                            : theme.palette.text.disabled,
+                        border: 'none',
+                        borderRadius: '8px',
+                        boxShadow: isUsed
+                          ? `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`
+                          : 'none',
+                        opacity: isUsed ? 1 : isAllowed ? 1 : 0.5,
+                        cursor: isUsed ? 'default' : isAllowed ? 'pointer' : 'not-allowed',
+                        '&:hover':
+                          isAllowed && !isUsed
+                            ? {
+                                backgroundColor: theme.palette.primary.hover,
+                                boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.15)}`,
+                                transform: 'translateY(-1px)',
+                              }
+                            : {},
+                        '&:active':
+                          isAllowed && !isUsed
+                            ? {
+                                transform: 'translateY(0px)',
+                                boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.1)}`,
+                              }
+                            : {},
+                        textTransform: 'none',
+                        transition: 'all 0.2s ease',
+                        '&.Mui-disabled': {
+                          color: isUsed ? theme.palette.common.white : theme.palette.text.disabled,
+                          backgroundColor: isUsed
+                            ? theme.palette.primary.main
+                            : theme.palette.action.disabled,
+                        },
+                      }}
+                    >
+                      {digit}
+                    </Button>
+                  );
+                });
+              })()}
             </Box>
           </Box>
 

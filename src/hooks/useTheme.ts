@@ -1,5 +1,5 @@
 import { createTheme, type Theme, alpha } from '@mui/material/styles';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../stores/gameStore';
 
 export const useTheme = () => {
@@ -7,19 +7,21 @@ export const useTheme = () => {
   const setThemeMode = useGameStore((s) => s.setThemeMode);
   const toggleDarkMode = useGameStore((s) => s.toggleDarkMode);
 
-  const prefersDark =
+  const prefersDarkInitial =
     typeof window !== 'undefined'
       ? window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
       : false;
-  const isDarkMode = themeMode === 'system' ? prefersDark : themeMode === 'dark';
+  const [systemPrefersDark, setSystemPrefersDark] = useState(prefersDarkInitial);
 
   useEffect(() => {
-    if (themeMode !== 'system') return;
+    if (typeof window === 'undefined') return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => setThemeMode('system');
+    const handler = (e: MediaQueryListEvent) => setSystemPrefersDark(e.matches);
     mq.addEventListener?.('change', handler);
     return () => mq.removeEventListener?.('change', handler);
-  }, [themeMode, setThemeMode]);
+  }, []);
+
+  const isDarkMode = themeMode === 'system' ? systemPrefersDark : themeMode === 'dark';
 
   const theme: Theme = useMemo(() => {
     const baseTheme = createTheme({

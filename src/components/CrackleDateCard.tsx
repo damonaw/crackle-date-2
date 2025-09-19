@@ -12,6 +12,9 @@ import {
   ListItemText,
   ListItemButton,
   Divider,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from '@mui/material';
 import {
   Backspace,
@@ -23,12 +26,11 @@ import {
   DarkMode,
   SettingsBrightness,
 } from '@mui/icons-material';
-import { RadioGroup, FormControlLabel, Radio } from '@mui/material';
 import { useGameStore } from '../stores/gameStore';
 import { useTheme } from '../hooks/useTheme';
 import { getDateDigits, getDigitsArray } from '../utils/dateUtils';
 import { validateEquationInput, getInputHint } from '../utils/inputValidator';
-import { validateEquation, type ValidationResult } from '../utils/mathValidator';
+import { validateEquation } from '../utils/mathValidator';
 import { calculateScore, getScoreDescription } from '../utils/scoring';
 import Stats from './Stats';
 
@@ -46,9 +48,9 @@ const CrackleDateCard: React.FC = () => {
     loadGameState();
   }, [loadGameState]);
 
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info'>('info');
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<'game' | 'stats'>('game');
 
@@ -128,6 +130,7 @@ const CrackleDateCard: React.FC = () => {
       setEquation(equation + value);
     } else {
       if (/^\d$/.test(value)) {
+        setSnackbarSeverity('info');
         setSnackbarMessage(getInputHint(equation, currentDate));
         setSnackbarOpen(true);
       }
@@ -136,7 +139,6 @@ const CrackleDateCard: React.FC = () => {
 
   const clearEquation = () => {
     setEquation('');
-    setValidationResult(null);
   };
 
   // Check if equation is ready for submission (all date digits used + equals sign + digits on both sides)
@@ -186,22 +188,24 @@ const CrackleDateCard: React.FC = () => {
 
   const validateEquationHandler = () => {
     if (!equation) {
+      setSnackbarSeverity('info');
       setSnackbarMessage('Please build an equation first');
       setSnackbarOpen(true);
       return;
     }
 
     const result = validateEquation(equation, currentDate);
-    setValidationResult(result);
     setValid(result.isValid);
 
     if (result.isValid) {
       const scoreValue = calculateScore(result);
       const description = getScoreDescription(scoreValue, result.complexity);
       addSolution(equation, scoreValue);
+      setSnackbarSeverity('success');
       setSnackbarMessage('🎉 ' + description);
       setSnackbarOpen(true);
     } else {
+      setSnackbarSeverity('error');
       setSnackbarMessage(result.error || 'Invalid equation');
       setSnackbarOpen(true);
     }
@@ -227,6 +231,7 @@ const CrackleDateCard: React.FC = () => {
               if (isEquationReadyForSubmission()) {
                 validateEquationHandler();
               } else {
+                setSnackbarSeverity('info');
                 setSnackbarMessage('Equation is not ready for submission.');
                 setSnackbarOpen(true);
               }
@@ -241,46 +246,47 @@ const CrackleDateCard: React.FC = () => {
               return;
             }
 
-            // Ignore modifier keys
             if (['Shift', 'Control', 'Alt', 'Meta', 'Tab', 'CapsLock', 'Escape'].includes(e.key)) {
               return;
             }
 
-            // Allow only valid characters
-            const allowedRegex = /^[0-9+\-*/^%()= x!sqrtab]$/;
-            if (!allowedRegex.test(e.key)) {
+            const mapKeyToToken = (key: string): string | null => {
+              if (key === 'x' || key === 'X') return '*';
+              if (key === 's' || key === 'S') return 'sqrt(';
+              if (key === 'a' || key === 'A') return 'abs(';
+              if (/^[0-9+\-*/^%()=!]{1}$/.test(key)) return key;
+              return null;
+            };
+
+            const token = mapKeyToToken(e.key);
+            if (!token) {
+              setSnackbarSeverity('error');
               setSnackbarMessage('Only digits and math operators are allowed.');
               setSnackbarOpen(true);
               return;
             }
 
             e.preventDefault();
-            const newValue = equation + e.key;
 
-            // Allow only digits and math operators (no letters)
-            const fullAllowedRegex = /^[0-9+\-*/^%()= x!sqrtab]*$/;
-            if (!fullAllowedRegex.test(newValue)) {
-              setSnackbarMessage('Only use digits and math operators.');
-              setSnackbarOpen(true);
-              return;
-            }
-
-            // Enforce digit order and only allow each digit once
-            const usedDigits = newValue.match(/\d/g) || [];
-            for (let i = 0; i < usedDigits.length; i++) {
-              if (usedDigits[i] !== digitsArray[i].toString()) {
-                setSnackbarMessage('Use the date digits in order.');
+            if (/^\d$/.test(token)) {
+              const usedDigits = (equation + token).match(/\d/g) || [];
+              for (let i = 0; i < usedDigits.length; i++) {
+                if (usedDigits[i] !== digitsArray[i].toString()) {
+                  setSnackbarSeverity('error');
+                  setSnackbarMessage('Use the date digits in order.');
+                  setSnackbarOpen(true);
+                  return;
+                }
+              }
+              if (usedDigits.length > digitsArray.length) {
+                setSnackbarSeverity('error');
+                setSnackbarMessage('You have used too many digits.');
                 setSnackbarOpen(true);
                 return;
               }
             }
-            if (usedDigits.length > digitsArray.length) {
-              setSnackbarMessage('You have used too many digits.');
-              setSnackbarOpen(true);
-              return;
-            }
 
-            setEquation(newValue);
+            addToEquation(token);
           }}
         >
           {/* Header - CrackleDate Style */}
@@ -554,9 +560,12 @@ const CrackleDateCard: React.FC = () => {
             anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
             sx={{
               '& .MuiSnackbarContent-root': {
-                backgroundColor: validationResult?.isValid
-                  ? theme.palette.success.main
-                  : theme.palette.error.main,
+                backgroundColor:
+                  snackbarSeverity === 'success'
+                    ? theme.palette.success.main
+                    : snackbarSeverity === 'error'
+                      ? theme.palette.error.main
+                      : theme.palette.info.main,
                 color: theme.palette.common.white,
                 fontSize: '14px',
                 fontWeight: 500,
@@ -624,7 +633,7 @@ const CrackleDateCard: React.FC = () => {
               }}
             >
               <ListItemIcon>
-                <Menu sx={{ color: theme.palette.text.primary }} />
+                <Calculate sx={{ color: theme.palette.text.primary }} />
               </ListItemIcon>
               <ListItemText
                 primary="Game"

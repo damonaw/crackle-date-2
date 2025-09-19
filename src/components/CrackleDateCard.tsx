@@ -35,7 +35,7 @@ import { calculateScore, getScoreDescription } from '../utils/scoring';
 import Stats from './Stats';
 
 const CrackleDateCard: React.FC = () => {
-  const { theme, isDarkMode, themeMode, setThemeMode } = useTheme();
+  const { theme, themeMode, setThemeMode } = useTheme();
 
   const { currentDate, equation, setEquation, setValid, addSolution, loadGameState } =
     useGameStore();
@@ -81,11 +81,7 @@ const CrackleDateCard: React.FC = () => {
     fontSize: '24px',
     fontWeight: 700,
     letterSpacing: '0.5px',
-    backgroundColor: isDisabled
-      ? theme.palette.action.disabled
-      : isDarkMode
-        ? theme.palette.grey[800]
-        : theme.palette.grey[300],
+    backgroundColor: isDisabled ? theme.palette.action.disabled : theme.palette.secondary.subtle,
     color: isDisabled ? theme.palette.text.disabled : theme.palette.text.primary,
     border: 'none',
     borderRadius: '8px',
@@ -94,8 +90,8 @@ const CrackleDateCard: React.FC = () => {
     cursor: isDisabled ? 'not-allowed' : 'pointer',
     '&:hover': !isDisabled
       ? {
-          backgroundColor: isDarkMode ? theme.palette.grey[700] : theme.palette.grey[400],
-          boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
+          backgroundColor: theme.palette.secondary.hover,
+          boxShadow: `0 2px 8px ${alpha(theme.palette.secondary.main, 0.15)}`,
           transform: 'translateY(-1px)',
         }
       : {},
@@ -106,9 +102,7 @@ const CrackleDateCard: React.FC = () => {
         }
       : {},
     '&.Mui-disabled': {
-      color: isDarkMode
-        ? alpha(theme.palette.text.primary, 0.5)
-        : alpha(theme.palette.text.primary, 0.4),
+      color: theme.palette.text.disabled,
       backgroundColor: theme.palette.action.disabled,
     },
     textTransform: 'none',
@@ -303,25 +297,59 @@ const CrackleDateCard: React.FC = () => {
                 zIndex: 100,
                 mb: 0.5,
                 px: 2,
-                py: 1,
+                py: 1.5,
                 borderRadius: 0,
-                backgroundColor: theme.palette.background.paper,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
+                backdropFilter: 'blur(10px)',
+                borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.15)}`,
               }}
             >
               <Box display="flex" alignItems="center">
-                <Calculate sx={{ fontSize: 36, mr: 1 }} />
+                <Calculate
+                  sx={{
+                    fontSize: 36,
+                    mr: 1,
+                    color: theme.palette.common.white,
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+                  }}
+                />
                 <Typography
                   variant="h5"
                   component="h1"
                   fontWeight={700}
                   letterSpacing={2}
-                  sx={{ fontSize: 32 }}
+                  sx={{
+                    fontSize: 32,
+                    color: theme.palette.common.white,
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                    background: `linear-gradient(45deg, ${theme.palette.common.white} 0%, ${alpha(theme.palette.common.white, 0.9)} 100%)`,
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
                 >
                   Crackle Date
                 </Typography>
               </Box>
-              <IconButton onClick={() => setMenuOpen(true)} sx={{ ml: 2 }} aria-label="menu">
-                <Menu sx={{ fontSize: 32 }} />
+              <IconButton
+                onClick={() => setMenuOpen(true)}
+                sx={{
+                  ml: 2,
+                  color: theme.palette.common.white,
+                  backgroundColor: alpha(theme.palette.common.white, 0.1),
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.common.white, 0.2),
+                  },
+                }}
+                aria-label="menu"
+              >
+                <Menu
+                  sx={{
+                    fontSize: 32,
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+                  }}
+                />
               </IconButton>
             </Box>
           </Box>
@@ -356,11 +384,9 @@ const CrackleDateCard: React.FC = () => {
                       fontWeight: 700,
                       letterSpacing: '0.5px',
                       backgroundColor: isUsed
-                        ? theme.palette.success.main
+                        ? theme.palette.primary.main
                         : isAllowed
-                          ? isDarkMode
-                            ? theme.palette.grey[800]
-                            : theme.palette.grey[300]
+                          ? theme.palette.primary.subtle
                           : theme.palette.action.disabled,
                       color: isUsed
                         ? theme.palette.common.white
@@ -370,17 +396,15 @@ const CrackleDateCard: React.FC = () => {
                       border: 'none',
                       borderRadius: '8px',
                       boxShadow: isUsed
-                        ? `0 2px 8px ${alpha(theme.palette.success.main, 0.3)}`
+                        ? `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`
                         : 'none',
                       opacity: isUsed ? 1 : isAllowed ? 1 : 0.5,
                       cursor: isUsed ? 'default' : isAllowed ? 'pointer' : 'not-allowed',
                       '&:hover':
                         isAllowed && !isUsed
                           ? {
-                              backgroundColor: isDarkMode
-                                ? theme.palette.grey[700]
-                                : theme.palette.grey[400],
-                              boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
+                              backgroundColor: theme.palette.primary.hover,
+                              boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.15)}`,
                               transform: 'translateY(-1px)',
                             }
                           : {},
@@ -396,7 +420,7 @@ const CrackleDateCard: React.FC = () => {
                       '&.Mui-disabled': {
                         color: isUsed ? theme.palette.common.white : theme.palette.text.disabled,
                         backgroundColor: isUsed
-                          ? theme.palette.success.main
+                          ? theme.palette.primary.main
                           : theme.palette.action.disabled,
                       },
                     }}
@@ -489,14 +513,14 @@ const CrackleDateCard: React.FC = () => {
                   fontSize: '16px',
                   fontWeight: 600,
                   letterSpacing: '0.5px',
-                  backgroundColor: isDarkMode ? theme.palette.grey[800] : theme.palette.grey[300],
+                  backgroundColor: theme.palette.secondary.subtle,
                   color: theme.palette.text.primary,
                   border: 'none',
                   borderRadius: '8px',
                   boxShadow: 'none',
                   '&:hover': {
-                    backgroundColor: isDarkMode ? theme.palette.grey[700] : theme.palette.grey[400],
-                    boxShadow: `0 2px 8px ${alpha(theme.palette.text.primary, 0.15)}`,
+                    backgroundColor: theme.palette.secondary.hover,
+                    boxShadow: `0 2px 8px ${alpha(theme.palette.secondary.main, 0.15)}`,
                     transform: 'translateY(-1px)',
                   },
                   '&:active': {
@@ -629,11 +653,21 @@ const CrackleDateCard: React.FC = () => {
                 borderRadius: '8px',
                 mb: 1,
                 backgroundColor:
-                  currentPage === 'game' ? theme.palette.action.hover : 'transparent',
+                  currentPage === 'game' ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                },
               }}
             >
               <ListItemIcon>
-                <Calculate sx={{ color: theme.palette.text.primary }} />
+                <Calculate
+                  sx={{
+                    color:
+                      currentPage === 'game'
+                        ? theme.palette.primary.main
+                        : theme.palette.text.primary,
+                  }}
+                />
               </ListItemIcon>
               <ListItemText
                 primary="Game"
@@ -654,11 +688,21 @@ const CrackleDateCard: React.FC = () => {
                 borderRadius: '8px',
                 mb: 1,
                 backgroundColor:
-                  currentPage === 'stats' ? theme.palette.action.hover : 'transparent',
+                  currentPage === 'stats' ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                },
               }}
             >
               <ListItemIcon>
-                <BarChart sx={{ color: theme.palette.text.primary }} />
+                <BarChart
+                  sx={{
+                    color:
+                      currentPage === 'stats'
+                        ? theme.palette.primary.main
+                        : theme.palette.text.primary,
+                  }}
+                />
               </ListItemIcon>
               <ListItemText
                 primary="Stats"
@@ -695,7 +739,7 @@ const CrackleDateCard: React.FC = () => {
                   borderLeft: '3px solid transparent',
                   transition:
                     'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
-                  '&:hover': { backgroundColor: theme.palette.action.hover },
+                  '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.05) },
                   '&:active': {
                     transform: 'translateY(1px)',
                     boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.12)}`,
@@ -722,7 +766,7 @@ const CrackleDateCard: React.FC = () => {
                   borderLeft: '3px solid transparent',
                   transition:
                     'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
-                  '&:hover': { backgroundColor: theme.palette.action.hover },
+                  '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.05) },
                   '&:active': {
                     transform: 'translateY(1px)',
                     boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.12)}`,
@@ -749,7 +793,7 @@ const CrackleDateCard: React.FC = () => {
                   borderLeft: '3px solid transparent',
                   transition:
                     'border-color 120ms ease, background-color 120ms ease, transform 80ms ease',
-                  '&:hover': { backgroundColor: theme.palette.action.hover },
+                  '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.05) },
                   '&:active': {
                     transform: 'translateY(1px)',
                     boxShadow: `0 1px 4px ${alpha(theme.palette.text.primary, 0.12)}`,

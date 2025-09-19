@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Box, Typography, Paper, Divider, IconButton } from '@mui/material';
 import { Star, TrendingUp, CheckCircle, Calculate, ArrowBack } from '@mui/icons-material';
 import type { Solution } from '../types/game';
-import { useTheme as useMuiTheme } from '@mui/material/styles';
+import { useTheme as useMuiTheme, alpha } from '@mui/material/styles';
 import MathEquation from './MathEquation';
 
 interface StatsProps {
@@ -19,13 +19,13 @@ export default function Stats({ onBack, score, streak, solutions, currentDate }:
   const statCards = useMemo(
     () => [
       {
-        icon: <CheckCircle sx={{ color: theme.palette.success.main }} />,
+        icon: <CheckCircle sx={{ color: theme.palette.primary.main }} />,
         label: 'Solutions Today',
         value: solutions.length,
         description: `Equations solved for ${currentDate}`,
       },
       {
-        icon: <Star sx={{ color: theme.palette.warning.main }} />,
+        icon: <Star sx={{ color: theme.palette.secondary.main }} />,
         label: 'Total Score',
         value: score,
         description: 'Points earned from all solutions',
@@ -37,16 +37,16 @@ export default function Stats({ onBack, score, streak, solutions, currentDate }:
         description: 'Days with at least one solution',
       },
       {
-        icon: <Calculate sx={{ color: theme.palette.text.primary }} />,
+        icon: <Calculate sx={{ color: theme.palette.primary.main }} />,
         label: 'Average Score',
         value: solutions.length > 0 ? Math.round(score / solutions.length) : 0,
         description: 'Average points per solution',
       },
     ],
     [
+      theme.palette.primary.main,
+      theme.palette.secondary.main,
       theme.palette.success.main,
-      theme.palette.warning.main,
-      theme.palette.text.primary,
       solutions.length,
       currentDate,
       score,
@@ -118,7 +118,7 @@ export default function Stats({ onBack, score, streak, solutions, currentDate }:
               p: 3,
               backgroundColor: theme.palette.background.paper,
               borderRadius: '8px',
-              border: `1px solid ${theme.palette.divider}`,
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
             }}
           >
             <Box display="flex" alignItems="center" gap={2} mb={1}>
@@ -160,7 +160,7 @@ export default function Stats({ onBack, score, streak, solutions, currentDate }:
 
       {solutionsReversed.length > 0 && (
         <>
-          <Divider sx={{ my: 3, borderColor: theme.palette.divider }} />
+          <Divider sx={{ my: 3, borderColor: alpha(theme.palette.primary.main, 0.12) }} />
 
           <Typography
             variant="h6"
@@ -186,7 +186,7 @@ export default function Stats({ onBack, score, streak, solutions, currentDate }:
                   p: 2,
                   backgroundColor: theme.palette.background.paper,
                   borderRadius: '4px',
-                  border: `1px solid ${theme.palette.divider}`,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
                 }}
               >
                 <Box display="flex" justifyContent="space-between" alignItems="center">

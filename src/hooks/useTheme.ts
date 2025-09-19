@@ -1,4 +1,4 @@
-import { createTheme, type Theme } from '@mui/material/styles';
+import { createTheme, type Theme, alpha } from '@mui/material/styles';
 import { useEffect, useMemo } from 'react';
 import { useGameStore } from '../stores/gameStore';
 
@@ -21,65 +21,92 @@ export const useTheme = () => {
     return () => mq.removeEventListener?.('change', handler);
   }, [themeMode, setThemeMode]);
 
-  const theme: Theme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode: isDarkMode ? 'dark' : 'light',
-          primary: {
-            main: isDarkMode ? '#BB86FC' : '#6200EE',
-            light: isDarkMode ? '#E1BEE7' : '#B388FF',
-            dark: isDarkMode ? '#9C64E8' : '#3700B3',
-          },
-          secondary: {
-            main: isDarkMode ? '#03DAC6' : '#018786',
-            light: isDarkMode ? '#66FFF9' : '#03DAC5',
-            dark: isDarkMode ? '#00A896' : '#00574B',
-          },
-          background: {
-            default: isDarkMode ? '#121212' : '#FAFAFA',
-            paper: isDarkMode ? '#1E1E1E' : '#FFFFFF',
-          },
-          success: {
-            main: isDarkMode ? '#4CAF50' : '#00C853',
-          },
-          warning: {
-            main: isDarkMode ? '#FF9800' : '#FF6D00',
-          },
-          error: {
-            main: '#CF6679',
-          },
+  const theme: Theme = useMemo(() => {
+    const baseTheme = createTheme({
+      palette: {
+        mode: isDarkMode ? 'dark' : 'light',
+        primary: {
+          main: isDarkMode ? '#BB86FC' : '#6200EE',
+          light: isDarkMode ? '#E1BEE7' : '#B388FF',
+          dark: isDarkMode ? '#9C64E8' : '#3700B3',
         },
-        typography: {
-          fontFamily: '"Inter", "Roboto", "Helvetica Neue", "Arial", sans-serif',
-          h1: { fontWeight: 700 },
-          h2: { fontWeight: 600 },
-          h3: { fontWeight: 600 },
-          h4: { fontWeight: 600 },
-          h5: { fontWeight: 600 },
-          h6: { fontWeight: 600 },
+        secondary: {
+          main: isDarkMode ? '#03DAC6' : '#018786',
+          light: isDarkMode ? '#66FFF9' : '#03DAC5',
+          dark: isDarkMode ? '#00A896' : '#00574B',
         },
-        shape: { borderRadius: 12 },
-        components: {
-          MuiButton: {
-            styleOverrides: {
-              root: {
-                textTransform: 'none',
-                borderRadius: 8,
-                fontWeight: 600,
-                padding: '8px 16px',
-              },
-            },
-          },
-          MuiPaper: {
-            styleOverrides: {
-              root: { backgroundImage: 'none' },
+        background: {
+          default: isDarkMode ? '#121212' : '#FAFAFA',
+          paper: isDarkMode ? '#1E1E1E' : '#FFFFFF',
+        },
+        success: {
+          main: isDarkMode ? '#4CAF50' : '#00C853',
+        },
+        warning: {
+          main: isDarkMode ? '#FF9800' : '#FF6D00',
+        },
+        error: {
+          main: '#CF6679',
+        },
+      },
+      typography: {
+        fontFamily: '"Inter", "Roboto", "Helvetica Neue", "Arial", sans-serif',
+        h1: { fontWeight: 700 },
+        h2: { fontWeight: 600 },
+        h3: { fontWeight: 600 },
+        h4: { fontWeight: 600 },
+        h5: { fontWeight: 600 },
+        h6: { fontWeight: 600 },
+      },
+      shape: { borderRadius: 12 },
+      components: {
+        MuiButton: {
+          styleOverrides: {
+            root: {
+              textTransform: 'none',
+              borderRadius: 8,
+              fontWeight: 600,
+              padding: '8px 16px',
             },
           },
         },
-      }),
-    [isDarkMode]
-  );
+        MuiPaper: {
+          styleOverrides: {
+            root: { backgroundImage: 'none' },
+          },
+        },
+      },
+    });
 
-  return { theme, isDarkMode, toggleDarkMode, themeMode, setThemeMode };
+    // Extend the theme with custom palette variants for consistent usage
+    return createTheme(baseTheme, {
+      palette: {
+        ...baseTheme.palette,
+        // Custom primary variants for different opacity levels
+        primary: {
+          ...baseTheme.palette.primary,
+          subtle: alpha(baseTheme.palette.primary.main, 0.08),
+          hover: alpha(baseTheme.palette.primary.main, 0.12),
+          active: alpha(baseTheme.palette.primary.main, 0.16),
+        },
+        // Custom secondary variants
+        secondary: {
+          ...baseTheme.palette.secondary,
+          subtle: alpha(baseTheme.palette.secondary.main, 0.08),
+          hover: alpha(baseTheme.palette.secondary.main, 0.12),
+          active: alpha(baseTheme.palette.secondary.main, 0.16),
+        },
+        // Enhanced action states
+        action: {
+          ...baseTheme.palette.action,
+          primaryHover: alpha(baseTheme.palette.primary.main, 0.05),
+          primarySelected: alpha(baseTheme.palette.primary.main, 0.1),
+          secondaryHover: alpha(baseTheme.palette.secondary.main, 0.05),
+          secondarySelected: alpha(baseTheme.palette.secondary.main, 0.1),
+        },
+      },
+    });
+  }, [isDarkMode]);
+
+  return { theme, toggleDarkMode, themeMode, setThemeMode };
 };

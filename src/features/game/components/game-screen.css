@@ -462,10 +462,6 @@
     width: 100%;
   }
 
-  .equation-actions {
-    flex-direction: column;
-  }
-
   .quick-actions {
     align-items: stretch;
     flex-direction: column;

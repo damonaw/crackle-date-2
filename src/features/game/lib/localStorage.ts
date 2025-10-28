@@ -56,6 +56,7 @@ export interface UserPreferences {
   soundEnabled: boolean;
   themeMode?: ThemeMode; // new preferred field
   tutorialSeen?: boolean;
+  dragAndDropBetaEnabled?: boolean;
 }
 
 const STORAGE_KEYS = {
@@ -396,6 +397,7 @@ export const getUserPreferences = (): UserPreferences => {
     soundEnabled: true,
     themeMode: 'system',
     tutorialSeen: false,
+    dragAndDropBetaEnabled: false,
   };
 
   const prefs = loadFromStorage(STORAGE_KEYS.USER_PREFS, defaultPrefs);
@@ -405,6 +407,9 @@ export const getUserPreferences = (): UserPreferences => {
   }
   if (typeof prefs.tutorialSeen !== 'boolean') {
     prefs.tutorialSeen = false;
+  }
+  if (typeof prefs.dragAndDropBetaEnabled !== 'boolean') {
+    prefs.dragAndDropBetaEnabled = false;
   }
   return prefs;
 };

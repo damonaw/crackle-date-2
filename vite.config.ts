@@ -10,9 +10,5 @@ export default defineConfig(({ command }) => ({
   server: {
     host: true, // or '0.0.0.0'
     port: 5173
-  },
-  build: {
-    outDir: 'dist/crackle-date-2',
-    emptyOutDir: true
   }
 }))

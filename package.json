@@ -7,7 +7,7 @@
     "dev": "vite --host",
     "build": "rm -rf dist && tsc -b && vite build",
     "lint": "eslint . && stylelint \"src/**/*.{css,scss}\"",
-    "preview": "vite preview --base /crackle-date-2/ --outDir dist/crackle-date-2",
+    "preview": "vite preview --base /crackle-date-2/",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",

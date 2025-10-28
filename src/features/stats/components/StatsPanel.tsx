@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import MathEquation from '../../math/components/MathEquation';
-import type { Solution } from '../../game/types';
+import type { AchievementStatus, Solution } from '../../game/types';
 import './stats-panel.css';
 
 interface StatsPanelProps {
@@ -9,6 +9,8 @@ interface StatsPanelProps {
   streak: number;
   solutions: Solution[];
   currentDate: string;
+  achievements: AchievementStatus[];
+  onShare?: () => void;
 }
 
 export default function StatsPanel({
@@ -17,6 +19,8 @@ export default function StatsPanel({
   streak,
   solutions,
   currentDate,
+  achievements,
+  onShare,
 }: StatsPanelProps) {
   const statCards = useMemo(
     () => [
@@ -49,6 +53,10 @@ export default function StatsPanel({
   );
 
   const solutionsReversed = useMemo(() => solutions.slice().reverse(), [solutions]);
+  const unlockedCount = useMemo(
+    () => achievements.filter((achievement) => achievement.unlocked).length,
+    [achievements]
+  );
 
   return (
     <section className="stats-panel" aria-label="Player statistics">
@@ -82,7 +90,14 @@ export default function StatsPanel({
 
       {solutionsReversed.length > 0 ? (
         <div className="stats-panel-solutions">
-          <h3>Today's solutions</h3>
+          <div className="stats-panel-solutions-header">
+            <h3>Today's solutions</h3>
+            {onShare && (
+              <button type="button" className="stats-panel-share" onClick={onShare}>
+                Share
+              </button>
+            )}
+          </div>
           <ul>
             {solutionsReversed.map((solution, index) => {
               const key = solution.timestamp instanceof Date ? solution.timestamp.getTime() : index;
@@ -105,6 +120,42 @@ export default function StatsPanel({
           <p>Submit your first equation to start tracking progress.</p>
         </div>
       )}
+
+      <div className="stats-panel-achievements">
+        <div className="stats-panel-achievements-header">
+          <h3>Achievements</h3>
+          <span>
+            {unlockedCount}/{achievements.length} unlocked
+          </span>
+        </div>
+        <ul className="stats-panel-achievement-list">
+          {achievements.map((achievement) => (
+            <li
+              key={achievement.id}
+              className="stats-panel-achievement"
+              data-state={achievement.unlocked ? 'unlocked' : 'locked'}
+            >
+              <div className="stats-panel-achievement-icon" aria-hidden="true">
+                {achievement.unlocked ? '🏆' : '🔒'}
+              </div>
+              <div className="stats-panel-achievement-content">
+                <div className="stats-panel-achievement-title">{achievement.title}</div>
+                <p className="stats-panel-achievement-description">{achievement.description}</p>
+                <div className="stats-panel-achievement-meta">
+                  {achievement.progress && (
+                    <span className="stats-panel-achievement-progress">{achievement.progress}</span>
+                  )}
+                  {achievement.unlocked && achievement.unlockedOn && (
+                    <span className="stats-panel-achievement-date">
+                      Unlocked {achievement.unlockedOn}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

@@ -1,4 +1,6 @@
 import type { ComplexityLevel } from '../types';
+import { differenceInDays, parseGameDate } from './dateUtils';
+import { recordAchievementDates } from './achievements';
 
 /**
  * Local Storage utilities for Crackle Date game
@@ -14,17 +16,35 @@ export interface GameStats {
   averageScore: number;
   scoreDistribution: { [score: string]: number };
   lastPlayedDate: string;
+  dailyBestScores: Record<string, number>;
+  daysPlayed: number;
+  achievementDates?: Record<string, string>;
+}
+
+export interface StoredSolutionData {
+  equation: string;
+  score: number;
+  timestamp: string;
+  complexity?: ComplexityLevel;
+}
+
+export interface StoredDayState {
+  equation: string;
+  solutions: StoredSolutionData[];
+  isValid: boolean;
+  completed: boolean;
+  hintsUsed: number;
 }
 
 export interface GameData {
+  lastSelectedDate: string;
+  history: Record<string, StoredDayState>;
+}
+
+interface LegacyGameData {
   currentDate: string;
   equation: string;
-  solutions: Array<{
-    equation: string;
-    score: number;
-    timestamp: string;
-    complexity?: ComplexityLevel;
-  }>;
+  solutions: StoredSolutionData[];
   isValid: boolean;
   completedToday: boolean;
 }
@@ -35,6 +55,7 @@ export interface UserPreferences {
   darkMode: boolean; // legacy; kept for backward compatibility
   soundEnabled: boolean;
   themeMode?: ThemeMode; // new preferred field
+  tutorialSeen?: boolean;
 }
 
 const STORAGE_KEYS = {
@@ -42,6 +63,65 @@ const STORAGE_KEYS = {
   GAME_DATA: 'crackle-date-game',
   USER_PREFS: 'crackle-date-prefs',
 } as const;
+
+const normalizeSolutions = (solutions: StoredSolutionData[] = []): StoredSolutionData[] =>
+  solutions.map((solution) => ({
+    equation: solution.equation,
+    score: solution.score,
+    timestamp: solution.timestamp,
+    complexity: solution.complexity,
+  }));
+
+const normalizeDayState = (state?: Partial<StoredDayState>): StoredDayState => {
+  const normalizedSolutions = normalizeSolutions(state?.solutions ?? []);
+
+  return {
+    equation: state?.equation ?? '',
+    solutions: normalizedSolutions,
+    isValid: state?.isValid ?? false,
+    completed: state?.completed ?? normalizedSolutions.length > 0,
+    hintsUsed: typeof state?.hintsUsed === 'number' ? state.hintsUsed : 0,
+  };
+};
+
+const convertLegacyGameData = (legacy: LegacyGameData): GameData => {
+  if (!legacy.currentDate) {
+    return { lastSelectedDate: '', history: {} };
+  }
+
+  return {
+    lastSelectedDate: legacy.currentDate,
+    history: {
+      [legacy.currentDate]: normalizeDayState({
+        equation: legacy.equation,
+        solutions: legacy.solutions,
+        isValid: legacy.isValid,
+        completed: legacy.completedToday,
+        hintsUsed: 0,
+      }),
+    },
+  };
+};
+
+const normalizeImportedStats = (incoming: Partial<GameStats>): GameStats => {
+  const current = getGameStats();
+  const merged: GameStats = {
+    ...current,
+    ...incoming,
+    scoreDistribution: incoming.scoreDistribution ?? current.scoreDistribution,
+    dailyBestScores: incoming.dailyBestScores ?? current.dailyBestScores,
+    achievementDates: incoming.achievementDates ?? current.achievementDates,
+  } as GameStats;
+
+  if (!merged.dailyBestScores) {
+    merged.dailyBestScores = {};
+  }
+  if (!merged.achievementDates) {
+    merged.achievementDates = {};
+  }
+
+  return merged;
+};
 
 /**
  * Check if localStorage is available
@@ -108,52 +188,154 @@ export const getGameStats = (): GameStats => {
     averageScore: 0,
     scoreDistribution: {},
     lastPlayedDate: '',
+    dailyBestScores: {},
+    daysPlayed: 0,
+    achievementDates: {},
   };
 
-  return loadFromStorage(STORAGE_KEYS.GAME_STATS, defaultStats);
+  const stats = loadFromStorage<GameStats>(STORAGE_KEYS.GAME_STATS, defaultStats);
+
+  if (!stats.dailyBestScores || Object.keys(stats.dailyBestScores).length === 0) {
+    stats.dailyBestScores = {};
+    const entries = Object.entries(stats.scoreDistribution);
+    let index = 0;
+    entries.forEach(([scoreStr, count]) => {
+      const scoreValue = Number.parseInt(scoreStr, 10);
+      for (let i = 0; i < count; i += 1) {
+        stats.dailyBestScores[`legacy-${index}`] = scoreValue;
+        index += 1;
+      }
+    });
+  }
+
+  if (!stats.achievementDates) {
+    stats.achievementDates = {};
+  }
+
+  stats.daysPlayed = Object.keys(stats.dailyBestScores).length;
+  if (stats.daysPlayed > stats.gamesPlayed) {
+    stats.gamesPlayed = stats.daysPlayed;
+  }
+  if (stats.daysPlayed > stats.gamesWon) {
+    stats.gamesWon = stats.daysPlayed;
+  }
+
+  const bestScores = Object.values(stats.dailyBestScores);
+  if (bestScores.length > 0) {
+    const totalScore = bestScores.reduce((sum, value) => sum + value, 0);
+    stats.averageScore = totalScore / bestScores.length;
+  } else {
+    stats.averageScore = 0;
+  }
+
+  return stats;
 };
 
 export const saveGameStats = (stats: GameStats): boolean => {
+  stats.daysPlayed = Object.keys(stats.dailyBestScores ?? {}).length;
+  stats.gamesPlayed = stats.daysPlayed;
+  stats.gamesWon = stats.daysPlayed;
+  if (!stats.achievementDates) {
+    stats.achievementDates = {};
+  }
+
+  const bestScores = Object.values(stats.dailyBestScores ?? {});
+  if (bestScores.length > 0) {
+    const totalScore = bestScores.reduce((sum, value) => sum + value, 0);
+    stats.averageScore = totalScore / bestScores.length;
+  } else {
+    stats.averageScore = 0;
+  }
+
   // Recalculate win percentage
   stats.winPercentage = stats.gamesPlayed > 0 ? (stats.gamesWon / stats.gamesPlayed) * 100 : 0;
 
   return saveToStorage(STORAGE_KEYS.GAME_STATS, stats);
 };
 
-export const updateGameStats = (won: boolean, score: number, date: string): GameStats => {
+export const updateGameStats = (
+  won: boolean,
+  score: number,
+  date: string,
+  isFirstSolutionOfDay: boolean
+): GameStats => {
   const stats = getGameStats();
 
-  // Update basic counts
-  stats.gamesPlayed += 1;
-  if (won) {
-    stats.gamesWon += 1;
+  if (!stats.dailyBestScores) {
+    stats.dailyBestScores = {};
   }
 
-  // Update streaks
-  if (won) {
-    stats.currentStreak += 1;
-    stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
-  } else {
+  const today = parseGameDate(date);
+  const lastPlayed = stats.lastPlayedDate ? parseGameDate(stats.lastPlayedDate) : null;
+  const isBackfill = lastPlayed ? today.getTime() < lastPlayed.getTime() : false;
+
+  if (!won) {
+    if (isFirstSolutionOfDay && !isBackfill) {
+      stats.currentStreak = 0;
+    }
+    if (!lastPlayed || today.getTime() >= lastPlayed.getTime()) {
+      stats.lastPlayedDate = date;
+    }
+    recordAchievementDates(stats, date);
+    saveGameStats(stats);
+    return stats;
+  }
+
+  if (isFirstSolutionOfDay && !isBackfill) {
+    if (lastPlayed) {
+      const delta = differenceInDays(today, lastPlayed);
+      if (delta === 1) {
+        stats.currentStreak += 1;
+      } else if (delta === 0) {
+        stats.currentStreak = Math.max(stats.currentStreak, 1);
+      } else {
+        stats.currentStreak = 1;
+      }
+    } else {
+      stats.currentStreak = 1;
+    }
+  }
+
+  if (stats.currentStreak < 0) {
     stats.currentStreak = 0;
   }
 
-  // Update score distribution
-  if (won) {
-    const scoreKey = score.toString();
-    stats.scoreDistribution[scoreKey] = (stats.scoreDistribution[scoreKey] || 0) + 1;
+  stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
 
-    // Recalculate average score
-    const totalScores = Object.entries(stats.scoreDistribution).reduce(
-      (sum, [scoreStr, count]) => sum + parseInt(scoreStr) * count,
-      0
-    );
-    stats.averageScore = totalScores / stats.gamesWon;
+  const previousBest = stats.dailyBestScores[date];
+  const newBest = previousBest !== undefined ? Math.max(previousBest, score) : score;
+
+  if (previousBest === undefined) {
+    stats.dailyBestScores[date] = newBest;
+    const scoreKey = newBest.toString();
+    stats.scoreDistribution[scoreKey] = (stats.scoreDistribution[scoreKey] || 0) + 1;
+  } else if (newBest !== previousBest) {
+    const previousKey = previousBest.toString();
+    const previousCount = stats.scoreDistribution[previousKey] || 0;
+    if (previousCount <= 1) {
+      delete stats.scoreDistribution[previousKey];
+    } else {
+      stats.scoreDistribution[previousKey] = previousCount - 1;
+    }
+
+    const newKey = newBest.toString();
+    stats.scoreDistribution[newKey] = (stats.scoreDistribution[newKey] || 0) + 1;
+    stats.dailyBestScores[date] = newBest;
   }
 
-  // Update last played date
-  stats.lastPlayedDate = date;
+  const bestScores = Object.values(stats.dailyBestScores);
+  const totalScore = bestScores.reduce((sum, value) => sum + value, 0);
+  stats.daysPlayed = bestScores.length;
+  stats.gamesPlayed = stats.daysPlayed;
+  stats.gamesWon = stats.daysPlayed;
+  stats.averageScore = stats.daysPlayed > 0 ? totalScore / stats.daysPlayed : 0;
 
-  // Save updated stats
+  if (!lastPlayed || today.getTime() >= lastPlayed.getTime()) {
+    stats.lastPlayedDate = date;
+  }
+
+  recordAchievementDates(stats, date);
+
   saveGameStats(stats);
 
   return stats;
@@ -163,26 +345,46 @@ export const updateGameStats = (won: boolean, score: number, date: string): Game
  * Game Data Management
  */
 export const getGameData = (): GameData | null => {
-  const defaultData: GameData = {
-    currentDate: '',
-    equation: '',
-    solutions: [],
-    isValid: false,
-    completedToday: false,
-  };
+  const raw = loadFromStorage<GameData | LegacyGameData | null>(STORAGE_KEYS.GAME_DATA, null);
 
-  const data = loadFromStorage(STORAGE_KEYS.GAME_DATA, defaultData);
-
-  // Return null if no valid data exists
-  if (!data.currentDate) {
+  if (!raw) {
     return null;
   }
 
-  return data;
+  if ('history' in raw && raw.history) {
+    const history: Record<string, StoredDayState> = {};
+    Object.entries(raw.history).forEach(([date, state]) => {
+      history[date] = normalizeDayState(state);
+    });
+
+    return {
+      lastSelectedDate: raw.lastSelectedDate ?? '',
+      history,
+    };
+  }
+
+  const legacy = raw as LegacyGameData;
+  const converted = convertLegacyGameData(legacy);
+
+  if (!converted.lastSelectedDate) {
+    return null;
+  }
+
+  return converted;
 };
 
 export const saveGameData = (gameData: GameData): boolean => {
-  return saveToStorage(STORAGE_KEYS.GAME_DATA, gameData);
+  const history: Record<string, StoredDayState> = {};
+  Object.entries(gameData.history).forEach(([date, state]) => {
+    history[date] = normalizeDayState(state);
+  });
+
+  const dataToSave: GameData = {
+    lastSelectedDate: gameData.lastSelectedDate,
+    history,
+  };
+
+  return saveToStorage(STORAGE_KEYS.GAME_DATA, dataToSave);
 };
 
 /**
@@ -193,12 +395,16 @@ export const getUserPreferences = (): UserPreferences => {
     darkMode: false,
     soundEnabled: true,
     themeMode: 'system',
+    tutorialSeen: false,
   };
 
   const prefs = loadFromStorage(STORAGE_KEYS.USER_PREFS, defaultPrefs);
   if (!prefs.themeMode) {
     // Derive themeMode from legacy darkMode if missing
     prefs.themeMode = prefs.darkMode ? 'dark' : 'light';
+  }
+  if (typeof prefs.tutorialSeen !== 'boolean') {
+    prefs.tutorialSeen = false;
   }
   return prefs;
 };
@@ -243,7 +449,7 @@ export const exportGameData = (): string => {
     gameData,
     prefs,
     exportDate: new Date().toISOString(),
-    version: '1.0',
+    version: '2.0',
   };
 
   return JSON.stringify(exportData, null, 2);
@@ -257,11 +463,23 @@ export const importGameData = (jsonData: string): boolean => {
     const importData = JSON.parse(jsonData);
 
     if (importData.stats) {
-      saveGameStats(importData.stats);
+      const stats = normalizeImportedStats(importData.stats);
+      saveGameStats(stats);
     }
 
     if (importData.gameData) {
-      saveGameData(importData.gameData);
+      if ('history' in importData.gameData) {
+        const incoming = importData.gameData as Partial<GameData>;
+        saveGameData({
+          lastSelectedDate: incoming.lastSelectedDate ?? '',
+          history: incoming.history ?? {},
+        });
+      } else {
+        const converted = convertLegacyGameData(importData.gameData as LegacyGameData);
+        if (converted.lastSelectedDate || Object.keys(converted.history).length > 0) {
+          saveGameData(converted);
+        }
+      }
     }
 
     if (importData.prefs) {

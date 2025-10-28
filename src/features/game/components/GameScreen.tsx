@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import StatsPanel from '../../stats/components/StatsPanel';
 import { useThemeMode } from '../../theme/hooks/useThemeMode';
 import { useGameStore } from '../state/game-store';
@@ -39,6 +40,111 @@ const OPERATOR_ROWS: OperatorToken[][] = [
 
 const MAX_HINTS_PER_DAY = 3;
 
+const LONG_PRESS_MS = 180;
+const MOVE_THRESHOLD_PX = 6;
+
+type EquationTokenType = 'digit' | 'operator' | 'function' | 'paren' | 'equals' | 'factorial';
+
+type EquationToken = {
+  value: string;
+  display: string;
+  type: EquationTokenType;
+};
+
+type DragSource =
+  | { type: 'digit-pad'; token: string; label: string }
+  | { type: 'operator-pad'; token: string; label: string }
+  | { type: 'equation'; token: EquationToken; index: number };
+
+type DragRuntime = {
+  pointerId: number;
+  source: DragSource;
+  startPoint: { x: number; y: number };
+  lastPoint: { x: number; y: number };
+  status: 'pressing' | 'dragging';
+  pressStart: number;
+  longPressTimeout?: number;
+};
+
+type DragOverlayState = {
+  token: string;
+  label: string;
+  x: number;
+  y: number;
+  source: DragSource;
+};
+
+const getTokenDisplay = (value: string): string => {
+  switch (value) {
+    case '*':
+      return '×';
+    case '/':
+      return '÷';
+    case '-':
+      return '−';
+    case 'sqrt(':
+      return '√(';
+    case 'abs(':
+      return '|x|';
+    default:
+      return value;
+  }
+};
+
+const tokenizeEquation = (equation: string): EquationToken[] => {
+  const tokens: EquationToken[] = [];
+  let index = 0;
+
+  while (index < equation.length) {
+    if (equation.startsWith('sqrt(', index)) {
+      tokens.push({ value: 'sqrt(', display: getTokenDisplay('sqrt('), type: 'function' });
+      index += 5;
+      continue;
+    }
+
+    if (equation.startsWith('abs(', index)) {
+      tokens.push({ value: 'abs(', display: getTokenDisplay('abs('), type: 'function' });
+      index += 4;
+      continue;
+    }
+
+    const char = equation[index];
+    let type: EquationTokenType = 'operator';
+
+    if (/\d/.test(char)) {
+      type = 'digit';
+    } else if (char === '(' || char === ')') {
+      type = 'paren';
+    } else if (char === '=') {
+      type = 'equals';
+    } else if (char === '!') {
+      type = 'factorial';
+    }
+
+    tokens.push({ value: char, display: getTokenDisplay(char), type });
+    index += 1;
+  }
+
+  return tokens;
+};
+
+const digitsInOrder = (equation: string, digitsArray: number[]): boolean => {
+  const digits = equation.match(/\d/g)?.map((digit) => parseInt(digit, 10)) ?? [];
+  if (digits.length > digitsArray.length) {
+    return false;
+  }
+
+  for (let index = 0; index < digits.length; index += 1) {
+    if (digits[index] !== digitsArray[index]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const joinTokens = (tokens: EquationToken[]): string => tokens.map((token) => token.value).join('');
+
 const mapKeyToToken = (key: string): string | null => {
   if (key === 'x' || key === 'X') return '*';
   if (key === 's' || key === 'S') return 'sqrt(';
@@ -64,6 +170,8 @@ export default function GameScreen() {
   const achievements = useGameStore((state) => state.achievements);
   const tutorialSeen = useGameStore((state) => state.tutorialSeen);
   const markTutorialComplete = useGameStore((state) => state.markTutorialComplete);
+  const dragAndDropEnabled = useGameStore((state) => state.dragAndDropEnabled);
+  const setDragAndDropEnabled = useGameStore((state) => state.setDragAndDropEnabled);
 
   const { themeMode, resolvedMode, cycleThemeMode, nextThemeMode } = useThemeMode();
 
@@ -72,6 +180,17 @@ export default function GameScreen() {
   const [toast, setToast] = useState<{ tone: ToastTone; message: string } | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [hasPromptedTutorial, setHasPromptedTutorial] = useState(false);
+  const [dragOverlay, setDragOverlay] = useState<DragOverlayState | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [isOverEquation, setIsOverEquation] = useState(false);
+
+  const equationRef = useRef<HTMLDivElement | null>(null);
+  const tokenRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dragRuntimeRef = useRef<DragRuntime | null>(null);
+  const suppressClickRef = useRef(false);
+  const hoverIndexRef = useRef<number | null>(null);
+  const isOverEquationRef = useRef(false);
+  const tokensRef = useRef<EquationToken[]>([]);
 
   useEffect(() => {
     loadGameState();
@@ -95,10 +214,331 @@ export default function GameScreen() {
     () => (equation.match(/\d/g) || []).map((digit) => parseInt(digit, 10)),
     [equation]
   );
+  const equationTokens = useMemo(() => tokenizeEquation(equation), [equation]);
+
+  useEffect(() => {
+    tokensRef.current = equationTokens;
+  }, [equationTokens]);
 
   const showToast = useCallback((tone: ToastTone, message: string) => {
     setToast({ tone, message });
   }, []);
+
+  const attemptEquationUpdate = useCallback(
+    (
+      nextEquation: string,
+      options: { digitErrorMessage?: string; equalsErrorMessage?: string } = {}
+    ) => {
+      if (!digitsInOrder(nextEquation, digitsArray)) {
+        showToast('error', options.digitErrorMessage ?? 'Numbers must stay in date order.');
+        return false;
+      }
+
+      const equalsCount = (nextEquation.match(/=/g) ?? []).length;
+      if (equalsCount > 1) {
+        showToast('error', options.equalsErrorMessage ?? 'Only one equals sign is allowed.');
+        return false;
+      }
+
+      setEquation(nextEquation);
+      return true;
+    },
+    [digitsArray, setEquation, showToast]
+  );
+
+  const insertTokenAt = useCallback(
+    (
+      tokenValue: string,
+      index: number,
+      options: { digitErrorMessage?: string; equalsErrorMessage?: string } = {}
+    ) => {
+      const tokens = tokensRef.current;
+      const safeIndex = Math.max(0, Math.min(index, tokens.length));
+      const prefix = joinTokens(tokens.slice(0, safeIndex));
+      const suffix = joinTokens(tokens.slice(safeIndex));
+      const nextEquation = `${prefix}${tokenValue}${suffix}`;
+      return attemptEquationUpdate(nextEquation, options);
+    },
+    [attemptEquationUpdate]
+  );
+
+  const moveTokenWithinEquation = useCallback(
+    (fromIndex: number, rawToIndex: number, options: { digitErrorMessage?: string } = {}) => {
+      const tokens = tokensRef.current;
+      if (fromIndex < 0 || fromIndex >= tokens.length) {
+        return false;
+      }
+
+      const working = tokens.slice();
+      const [moved] = working.splice(fromIndex, 1);
+      let targetIndex = rawToIndex;
+      if (targetIndex > fromIndex) {
+        targetIndex -= 1;
+      }
+      const safeIndex = Math.max(0, Math.min(targetIndex, working.length));
+      working.splice(safeIndex, 0, moved);
+      const nextEquation = joinTokens(working);
+      return attemptEquationUpdate(nextEquation, options);
+    },
+    [attemptEquationUpdate]
+  );
+
+  const removeTokenAt = useCallback(
+    (index: number, options: { digitErrorMessage?: string } = {}) => {
+      const tokens = tokensRef.current;
+      if (index < 0 || index >= tokens.length) {
+        return false;
+      }
+      const working = tokens.slice();
+      working.splice(index, 1);
+      const nextEquation = joinTokens(working);
+      return attemptEquationUpdate(nextEquation, options);
+    },
+    [attemptEquationUpdate]
+  );
+
+  const cancelDrag = useCallback(() => {
+    const runtime = dragRuntimeRef.current;
+    if (runtime?.longPressTimeout) {
+      clearTimeout(runtime.longPressTimeout);
+    }
+    dragRuntimeRef.current = null;
+    setDragOverlay(null);
+    setHoverIndex(null);
+    hoverIndexRef.current = null;
+    setIsOverEquation(false);
+    isOverEquationRef.current = false;
+  }, []);
+
+  const updateHoverTarget = useCallback((clientX: number, clientY: number) => {
+    const container = equationRef.current;
+    if (!container) {
+      hoverIndexRef.current = null;
+      setHoverIndex(null);
+      isOverEquationRef.current = false;
+      setIsOverEquation(false);
+      return;
+    }
+
+    const rect = container.getBoundingClientRect();
+    const inside =
+      clientX >= rect.left &&
+      clientX <= rect.right &&
+      clientY >= rect.top &&
+      clientY <= rect.bottom;
+
+    isOverEquationRef.current = inside;
+    setIsOverEquation(inside);
+
+    if (!inside) {
+      hoverIndexRef.current = null;
+      setHoverIndex(null);
+      return;
+    }
+
+    const tokens = tokensRef.current;
+    let nextIndex = tokens.length;
+    for (let index = 0; index < tokens.length; index += 1) {
+      const node = tokenRefs.current[index];
+      if (!node) {
+        continue;
+      }
+      const tokenRect = node.getBoundingClientRect();
+      const midpoint = tokenRect.left + tokenRect.width / 2;
+      if (clientX < midpoint) {
+        nextIndex = index;
+        break;
+      }
+    }
+
+    hoverIndexRef.current = nextIndex;
+    setHoverIndex(nextIndex);
+  }, []);
+
+  const activateDrag = useCallback(() => {
+    const runtime = dragRuntimeRef.current;
+    if (!runtime || runtime.status === 'dragging') {
+      return;
+    }
+
+    if (runtime.longPressTimeout) {
+      clearTimeout(runtime.longPressTimeout);
+      runtime.longPressTimeout = undefined;
+    }
+
+    runtime.status = 'dragging';
+
+    const label =
+      runtime.source.type === 'equation' ? runtime.source.token.display : runtime.source.label;
+
+    setDragOverlay({
+      token: runtime.source.type === 'equation' ? runtime.source.token.value : runtime.source.token,
+      label,
+      x: runtime.lastPoint.x,
+      y: runtime.lastPoint.y,
+      source: runtime.source,
+    });
+
+    updateHoverTarget(runtime.lastPoint.x, runtime.lastPoint.y);
+  }, [updateHoverTarget]);
+
+  const beginPress = useCallback(
+    (event: ReactPointerEvent<HTMLElement>, source: DragSource) => {
+      if (!dragAndDropEnabled) {
+        return;
+      }
+      if (event.button !== 0 && event.pointerType === 'mouse') {
+        return;
+      }
+
+      cancelDrag();
+
+      const runtime: DragRuntime = {
+        pointerId: event.pointerId,
+        source,
+        startPoint: { x: event.clientX, y: event.clientY },
+        lastPoint: { x: event.clientX, y: event.clientY },
+        status: 'pressing',
+        pressStart: performance.now(),
+      };
+
+      runtime.longPressTimeout = window.setTimeout(() => {
+        const current = dragRuntimeRef.current;
+        if (current && current.pointerId === runtime.pointerId && current.status === 'pressing') {
+          activateDrag();
+        }
+      }, LONG_PRESS_MS);
+
+      dragRuntimeRef.current = runtime;
+    },
+    [activateDrag, cancelDrag, dragAndDropEnabled]
+  );
+
+  useEffect(() => {
+    if (!dragAndDropEnabled) {
+      cancelDrag();
+      return;
+    }
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const runtime = dragRuntimeRef.current;
+      if (!runtime || event.pointerId !== runtime.pointerId) {
+        return;
+      }
+
+      runtime.lastPoint = { x: event.clientX, y: event.clientY };
+
+      if (runtime.status === 'pressing') {
+        const dx = event.clientX - runtime.startPoint.x;
+        const dy = event.clientY - runtime.startPoint.y;
+        const distance = Math.hypot(dx, dy);
+        const elapsed = performance.now() - runtime.pressStart;
+        if (elapsed >= LONG_PRESS_MS && distance >= MOVE_THRESHOLD_PX) {
+          if (runtime.longPressTimeout) {
+            clearTimeout(runtime.longPressTimeout);
+            runtime.longPressTimeout = undefined;
+          }
+          activateDrag();
+        }
+        return;
+      }
+
+      if (runtime.status === 'dragging') {
+        event.preventDefault();
+        setDragOverlay((current) =>
+          current
+            ? {
+                ...current,
+                x: event.clientX,
+                y: event.clientY,
+              }
+            : current
+        );
+        updateHoverTarget(event.clientX, event.clientY);
+      }
+    };
+
+    const finalizeDrag = (event: PointerEvent, cancelled: boolean) => {
+      const runtime = dragRuntimeRef.current;
+      if (!runtime || event.pointerId !== runtime.pointerId) {
+        return;
+      }
+
+      if (runtime.longPressTimeout) {
+        clearTimeout(runtime.longPressTimeout);
+        runtime.longPressTimeout = undefined;
+      }
+
+      if (runtime.status !== 'dragging') {
+        dragRuntimeRef.current = null;
+        return;
+      }
+
+      const targetIndex = hoverIndexRef.current ?? tokensRef.current.length;
+      const insideEquation = isOverEquationRef.current;
+      const source = runtime.source;
+
+      if (!cancelled) {
+        if (source.type === 'digit-pad' || source.type === 'operator-pad') {
+          if (insideEquation) {
+            insertTokenAt(source.token, targetIndex, {
+              digitErrorMessage:
+                source.type === 'digit-pad' ? 'Use the date digits in order.' : undefined,
+              equalsErrorMessage: 'Only one equals sign is allowed.',
+            });
+          }
+        } else if (source.type === 'equation') {
+          if (insideEquation) {
+            moveTokenWithinEquation(source.index, targetIndex, {
+              digitErrorMessage:
+                source.token.type === 'digit' ? 'Numbers must stay in date order.' : undefined,
+            });
+          } else {
+            removeTokenAt(source.index, {
+              digitErrorMessage:
+                source.token.type === 'digit'
+                  ? 'Remove later digits first to keep the order.'
+                  : undefined,
+            });
+          }
+        }
+      }
+
+      suppressClickRef.current = true;
+      setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+
+      cancelDrag();
+    };
+
+    const handlePointerUp = (event: PointerEvent) => finalizeDrag(event, false);
+    const handlePointerCancel = (event: PointerEvent) => finalizeDrag(event, true);
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerCancel);
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerCancel);
+    };
+  }, [
+    activateDrag,
+    cancelDrag,
+    dragAndDropEnabled,
+    insertTokenAt,
+    moveTokenWithinEquation,
+    removeTokenAt,
+    updateHoverTarget,
+  ]);
+
+  useEffect(() => {
+    if (!dragAndDropEnabled) {
+      cancelDrag();
+    }
+  }, [cancelDrag, dragAndDropEnabled]);
 
   const remainingHints = Math.max(0, MAX_HINTS_PER_DAY - hintsUsed);
 
@@ -336,6 +776,9 @@ export default function GameScreen() {
     }
   }, [nextThemeMode]);
 
+  const isRemovingToken = dragOverlay?.source.type === 'equation' && !isOverEquation;
+  tokenRefs.current = [];
+
   return (
     <div className="game-screen" data-view={view}>
       <header className="game-header">
@@ -398,7 +841,24 @@ export default function GameScreen() {
                     className="digit-button"
                     disabled={isUsed}
                     data-state={isUsed ? 'used' : isNext ? 'available' : 'waiting'}
-                    onClick={() => !isUsed && isNext && handleDigitPress(digit)}
+                    onPointerDown={(event) =>
+                      dragAndDropEnabled
+                        ? beginPress(event, {
+                            type: 'digit-pad',
+                            token: digit.toString(),
+                            label: digit.toString(),
+                          })
+                        : undefined
+                    }
+                    onClick={() => {
+                      if (dragAndDropEnabled && suppressClickRef.current) {
+                        suppressClickRef.current = false;
+                        return;
+                      }
+                      if (!isUsed && isNext) {
+                        handleDigitPress(digit);
+                      }
+                    }}
                   >
                     {digit}
                   </button>
@@ -406,8 +866,57 @@ export default function GameScreen() {
               })}
             </div>
 
-            <div className="equation-display" role="textbox" aria-label="Current equation">
-              {equation || <span className="equation-placeholder">Build your equation</span>}
+            <div
+              className="equation-display"
+              role="textbox"
+              aria-label="Current equation"
+              data-draggable={dragAndDropEnabled ? 'true' : 'false'}
+              data-dragging={dragOverlay ? 'true' : 'false'}
+              data-removing={isRemovingToken ? 'true' : 'false'}
+              ref={equationRef}
+            >
+              {dragAndDropEnabled ? (
+                equationTokens.length > 0 ? (
+                  <>
+                    {equationTokens.map((token, index) => {
+                      const isDraggingToken =
+                        dragOverlay?.source.type === 'equation' &&
+                        dragOverlay.source.index === index;
+                      return (
+                        <Fragment key={`${token.value}-${index}`}>
+                          {hoverIndex === index && (
+                            <span className="equation-drop-indicator" aria-hidden="true" />
+                          )}
+                          <div
+                            className="equation-token"
+                            role="button"
+                            tabIndex={-1}
+                            data-type={token.type}
+                            data-dragging={isDraggingToken ? 'true' : 'false'}
+                            onPointerDown={(event) =>
+                              beginPress(event, { type: 'equation', token, index })
+                            }
+                            ref={(node) => {
+                              tokenRefs.current[index] = node;
+                            }}
+                          >
+                            {token.display}
+                          </div>
+                        </Fragment>
+                      );
+                    })}
+                    {hoverIndex === equationTokens.length && (
+                      <span className="equation-drop-indicator" aria-hidden="true" />
+                    )}
+                  </>
+                ) : (
+                  <span className="equation-placeholder">Build your equation</span>
+                )
+              ) : equation ? (
+                equation
+              ) : (
+                <span className="equation-placeholder">Build your equation</span>
+              )}
             </div>
 
             <div className="operator-pad" aria-label="Math operators">
@@ -419,7 +928,22 @@ export default function GameScreen() {
                       type="button"
                       className="operator-button"
                       disabled={item.token === '=' && equation.includes('=')}
-                      onClick={() => addToken(item.token)}
+                      onPointerDown={(event) =>
+                        dragAndDropEnabled
+                          ? beginPress(event, {
+                              type: 'operator-pad',
+                              token: item.token,
+                              label: item.label,
+                            })
+                          : undefined
+                      }
+                      onClick={() => {
+                        if (dragAndDropEnabled && suppressClickRef.current) {
+                          suppressClickRef.current = false;
+                          return;
+                        }
+                        addToken(item.token);
+                      }}
                     >
                       {item.label}
                     </button>
@@ -530,6 +1054,22 @@ export default function GameScreen() {
               </button>
             </div>
             <div className="sheet-section">
+              <p className="sheet-section-title">Equation builder beta</p>
+              <p className="sheet-section-hint">
+                Enable the experimental drag &amp; drop editor alongside tap and keyboard input.
+              </p>
+              <label className="sheet-toggle">
+                <input
+                  type="checkbox"
+                  checked={dragAndDropEnabled}
+                  onChange={(event) => setDragAndDropEnabled(event.target.checked)}
+                />
+                <span>
+                  Drag &amp; drop builder <span className="sheet-beta-pill">Beta</span>
+                </span>
+              </label>
+            </div>
+            <div className="sheet-section">
               <p className="sheet-section-title">Hints</p>
               <p className="sheet-section-hint">
                 {remainingHints > 0
@@ -599,6 +1139,17 @@ export default function GameScreen() {
               </button>
             </footer>
           </div>
+        </div>
+      )}
+
+      {dragOverlay && (
+        <div
+          className="floating-token"
+          data-source={dragOverlay.source.type}
+          style={{ left: `${dragOverlay.x}px`, top: `${dragOverlay.y}px` }}
+          aria-hidden="true"
+        >
+          {dragOverlay.label}
         </div>
       )}
 

@@ -28,6 +28,15 @@ export const formatDateForGame = (date: Date): string => {
   return `${month}-${day.toString().padStart(2, '0')}-${year}`;
 };
 
+export const parseGameDate = (dateString: string): Date => {
+  const [monthStr, dayStr, yearStr] = dateString.split('-');
+  const month = Number.parseInt(monthStr, 10) - 1;
+  const day = Number.parseInt(dayStr, 10);
+  const year = Number.parseInt(yearStr, 10);
+
+  return new Date(year, Number.isNaN(month) ? 0 : month, Number.isNaN(day) ? 1 : day);
+};
+
 export const getDateDigits = (dateString: string): DateDigits => {
   // Format: M-DD-YYYY (e.g., "9-17-2025")
   const [monthStr, dayStr, yearStr] = dateString.split('-');
@@ -68,4 +77,27 @@ export const getDigitsArray = (dateDigits: DateDigits): number[] => {
 export const getTodaysGameDate = (): string => {
   const estDate = getCurrentDateEST();
   return formatDateForGame(estDate);
+};
+
+const MS_PER_DAY = 86_400_000;
+
+export const differenceInDays = (dateA: Date, dateB: Date): number => {
+  const utcA = Date.UTC(dateA.getFullYear(), dateA.getMonth(), dateA.getDate());
+  const utcB = Date.UTC(dateB.getFullYear(), dateB.getMonth(), dateB.getDate());
+  return Math.round((utcA - utcB) / MS_PER_DAY);
+};
+
+export const getRecentGameDates = (
+  count: number,
+  referenceDate: Date = getCurrentDateEST()
+): string[] => {
+  const dates: string[] = [];
+
+  for (let index = 0; index < count; index += 1) {
+    const cursor = new Date(referenceDate);
+    cursor.setDate(referenceDate.getDate() - index);
+    dates.push(formatDateForGame(cursor));
+  }
+
+  return dates;
 };

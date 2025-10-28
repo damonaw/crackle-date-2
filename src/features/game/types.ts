@@ -5,6 +5,9 @@ export interface GameState {
   score: number;
   streak: number;
   solutions: Solution[];
+  hintsUsed: number;
+  availableDates: string[];
+  achievements: AchievementStatus[];
 }
 
 export interface Solution {
@@ -15,6 +18,18 @@ export interface Solution {
 }
 
 export type ComplexityLevel = 'trivial' | 'simple' | 'moderate' | 'complex' | 'advanced';
+
+export interface AchievementDefinition {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface AchievementStatus extends AchievementDefinition {
+  unlocked: boolean;
+  unlockedOn?: string;
+  progress?: string;
+}
 
 export interface DateDigits {
   month: number;

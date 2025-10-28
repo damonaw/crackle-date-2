@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { ComplexityLevel, GameState } from '../types';
-import { getTodaysGameDate } from '../lib/dateUtils';
+import { getTodaysGameDate, getRecentGameDates, parseGameDate } from '../lib/dateUtils';
 import {
   getGameData,
   saveGameData,
@@ -10,7 +10,9 @@ import {
   saveUserPreferences,
   type GameStats,
   type ThemeMode,
+  type StoredDayState,
 } from '../lib/localStorage';
+import { evaluateAchievements } from '../lib/achievements';
 
 interface GameStore extends GameState {
   setEquation: (equation: string) => void;
@@ -19,139 +21,238 @@ interface GameStore extends GameState {
   resetGame: () => void;
   setScore: (score: number) => void;
   gameStats: GameStats;
-  updateStats: (won: boolean, score: number) => void;
+  updateStats: (won: boolean, score: number, isFirstSolutionOfDay: boolean) => void;
   loadGameState: () => void;
   saveGameState: () => void;
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
   cycleThemeMode: () => void;
+  selectDate: (date: string) => void;
+  incrementHintsUsed: () => void;
+  tutorialSeen: boolean;
+  markTutorialComplete: () => void;
 }
 
+const RECENT_DATES_TO_SHOW = 7;
+const MAX_HINTS_PER_DAY = 3;
+
+const initialDate = getTodaysGameDate();
+
 const initialState: GameState = {
-  currentDate: getTodaysGameDate(),
+  currentDate: initialDate,
   equation: '',
   isValid: false,
   score: 0,
   streak: 0,
   solutions: [],
+  hintsUsed: 0,
+  availableDates: [initialDate],
+  achievements: [],
+};
+
+const sortDatesDesc = (dates: string[]): string[] =>
+  Array.from(new Set(dates)).sort(
+    (a, b) => parseGameDate(b).getTime() - parseGameDate(a).getTime()
+  );
+
+const buildAvailableDates = (
+  history: Record<string, StoredDayState>,
+  currentDate: string
+): string[] =>
+  sortDatesDesc([
+    ...getRecentGameDates(RECENT_DATES_TO_SHOW),
+    ...Object.keys(history),
+    currentDate,
+  ]);
+
+const hydrateDayState = (dayState?: StoredDayState) => {
+  const solutions = dayState
+    ? dayState.solutions.map((stored) => ({
+        equation: stored.equation,
+        score: stored.score,
+        timestamp: new Date(stored.timestamp),
+        complexity: stored.complexity ?? 'simple',
+      }))
+    : [];
+
+  const score = solutions.reduce((total, sol) => total + sol.score, 0);
+
+  return {
+    equation: dayState?.equation ?? '',
+    solutions,
+    isValid: dayState?.isValid ?? false,
+    hintsUsed: dayState?.hintsUsed ?? 0,
+    score,
+  };
 };
 
 const THEME_SEQUENCE: ThemeMode[] = ['system', 'light', 'dark'];
 
-export const useGameStore = create<GameStore>((set, get) => ({
-  ...initialState,
-  gameStats: getGameStats(),
-  themeMode: getUserPreferences().themeMode ?? 'system',
+export const useGameStore = create<GameStore>((set, get) => {
+  const stats = getGameStats();
+  const prefs = getUserPreferences();
 
-  setEquation: (equation: string) => {
-    set({ equation });
-    setTimeout(() => get().saveGameState(), 100);
-  },
+  return {
+    ...initialState,
+    availableDates: buildAvailableDates({}, initialState.currentDate),
+    achievements: evaluateAchievements(stats),
+    gameStats: stats,
+    themeMode: prefs.themeMode ?? 'system',
+    tutorialSeen: prefs.tutorialSeen ?? false,
+    streak: stats.currentStreak,
 
-  setValid: (isValid: boolean) => {
-    set({ isValid });
-  },
+    setEquation: (equation: string) => {
+      set({ equation });
+      setTimeout(() => get().saveGameState(), 100);
+    },
 
-  addSolution: (equation: string, score: number, complexity: ComplexityLevel) => {
-    const newSolution = {
-      equation,
-      score,
-      timestamp: new Date(),
-      complexity,
-    };
+    setValid: (isValid: boolean) => {
+      set({ isValid });
+    },
 
-    set((state) => ({
-      solutions: [...state.solutions, newSolution],
-      score: state.score + score,
-    }));
+    addSolution: (equation: string, score: number, complexity: ComplexityLevel) => {
+      const wasEmpty = get().solutions.length === 0;
+      const newSolution = {
+        equation,
+        score,
+        timestamp: new Date(),
+        complexity,
+      };
 
-    get().updateStats(true, score);
-    get().saveGameState();
-  },
-
-  setScore: (score: number) => {
-    set({ score });
-  },
-
-  updateStats: (won: boolean, score: number) => {
-    const updatedStats = updateGameStats(won, score, get().currentDate);
-    set({ gameStats: updatedStats });
-  },
-
-  resetGame: () => {
-    set({
-      ...initialState,
-      currentDate: getTodaysGameDate(),
-      gameStats: get().gameStats,
-      themeMode: get().themeMode,
-    });
-    get().saveGameState();
-  },
-
-  loadGameState: () => {
-    const savedGame = getGameData();
-    const todaysDate = getTodaysGameDate();
-
-    if (savedGame && savedGame.currentDate === todaysDate) {
-      const convertedSolutions = savedGame.solutions.map((sol) => ({
-        equation: sol.equation,
-        score: sol.score,
-        timestamp: new Date(sol.timestamp),
-        complexity: sol.complexity ?? 'simple',
+      set((state) => ({
+        solutions: [...state.solutions, newSolution],
+        score: state.score + score,
+        availableDates: sortDatesDesc([...state.availableDates, state.currentDate]),
       }));
 
-      set({
-        currentDate: savedGame.currentDate,
-        equation: savedGame.equation,
-        solutions: convertedSolutions,
-        isValid: savedGame.isValid,
-        score: convertedSolutions.reduce((total, sol) => total + sol.score, 0),
-      });
-    } else {
-      set({
-        ...initialState,
-        currentDate: todaysDate,
-        gameStats: get().gameStats,
-      });
+      get().updateStats(true, score, wasEmpty);
       get().saveGameState();
-    }
+    },
 
-    set({
-      gameStats: getGameStats(),
-      themeMode: getUserPreferences().themeMode ?? 'system',
-    });
-  },
+    setScore: (score: number) => {
+      set({ score });
+    },
 
-  saveGameState: () => {
-    const state = get();
-    const storageSolutions = state.solutions.map((sol) => ({
-      equation: sol.equation,
-      score: sol.score,
-      timestamp: sol.timestamp.toISOString(),
-      complexity: sol.complexity,
-    }));
+    updateStats: (won: boolean, score: number, isFirstSolutionOfDay: boolean) => {
+      const updatedStats = updateGameStats(won, score, get().currentDate, isFirstSolutionOfDay);
+      set({
+        gameStats: updatedStats,
+        streak: updatedStats.currentStreak,
+        achievements: evaluateAchievements(updatedStats),
+      });
+    },
 
-    const gameData = {
-      currentDate: state.currentDate,
-      equation: state.equation,
-      solutions: storageSolutions,
-      isValid: state.isValid,
-      completedToday: state.solutions.length > 0,
-    };
+    resetGame: () => {
+      const todaysDate = getTodaysGameDate();
+      set((state) => ({
+        ...state,
+        currentDate: todaysDate,
+        equation: '',
+        isValid: false,
+        score: 0,
+        solutions: [],
+        hintsUsed: 0,
+        availableDates: sortDatesDesc([...state.availableDates, todaysDate]),
+        streak: state.gameStats.currentStreak,
+      }));
+      get().saveGameState();
+    },
 
-    saveGameData(gameData);
-  },
+    loadGameState: () => {
+      const statsSnapshot = getGameStats();
+      const prefsSnapshot = getUserPreferences();
+      const todaysDate = getTodaysGameDate();
+      const savedGame = getGameData();
+      const history = savedGame?.history ?? {};
+      const desiredDate = savedGame?.lastSelectedDate || todaysDate;
+      const currentDate = history[desiredDate] ? desiredDate : todaysDate;
+      const hydrated = hydrateDayState(history[currentDate]);
 
-  setThemeMode: (mode: ThemeMode) => {
-    set({ themeMode: mode });
-    const prefs = getUserPreferences();
-    saveUserPreferences({ ...prefs, themeMode: mode });
-  },
+      set({
+        currentDate,
+        equation: hydrated.equation,
+        solutions: hydrated.solutions,
+        isValid: hydrated.isValid,
+        score: hydrated.score,
+        hintsUsed: hydrated.hintsUsed,
+        availableDates: buildAvailableDates(history, currentDate),
+        gameStats: statsSnapshot,
+        streak: statsSnapshot.currentStreak,
+        achievements: evaluateAchievements(statsSnapshot),
+        themeMode: prefsSnapshot.themeMode ?? 'system',
+        tutorialSeen: prefsSnapshot.tutorialSeen ?? false,
+      });
 
-  cycleThemeMode: () => {
-    const current = get().themeMode;
-    const index = THEME_SEQUENCE.indexOf(current);
-    const next = THEME_SEQUENCE[(index + 1) % THEME_SEQUENCE.length];
-    get().setThemeMode(next);
-  },
-}));
+      get().saveGameState();
+    },
+
+    saveGameState: () => {
+      const state = get();
+      const existing = getGameData() ?? { lastSelectedDate: state.currentDate, history: {} };
+      const history = { ...existing.history };
+
+      history[state.currentDate] = {
+        equation: state.equation,
+        solutions: state.solutions.map((sol) => ({
+          equation: sol.equation,
+          score: sol.score,
+          timestamp: sol.timestamp.toISOString(),
+          complexity: sol.complexity,
+        })),
+        isValid: state.isValid,
+        completed: state.solutions.length > 0,
+        hintsUsed: state.hintsUsed,
+      };
+
+      saveGameData({
+        lastSelectedDate: state.currentDate,
+        history,
+      });
+    },
+
+    setThemeMode: (mode: ThemeMode) => {
+      set({ themeMode: mode });
+      const prefsSnapshot = getUserPreferences();
+      saveUserPreferences({ ...prefsSnapshot, themeMode: mode });
+    },
+
+    cycleThemeMode: () => {
+      const current = get().themeMode;
+      const index = THEME_SEQUENCE.indexOf(current);
+      const next = THEME_SEQUENCE[(index + 1) % THEME_SEQUENCE.length];
+      get().setThemeMode(next);
+    },
+
+    selectDate: (date: string) => {
+      const savedGame = getGameData();
+      const history = savedGame?.history ?? {};
+      const hydrated = hydrateDayState(history[date]);
+
+      set({
+        currentDate: date,
+        equation: hydrated.equation,
+        solutions: hydrated.solutions,
+        isValid: hydrated.isValid,
+        score: hydrated.score,
+        hintsUsed: hydrated.hintsUsed,
+        availableDates: buildAvailableDates(history, date),
+      });
+
+      get().saveGameState();
+    },
+
+    incrementHintsUsed: () => {
+      set((state) => ({ hintsUsed: Math.min(state.hintsUsed + 1, MAX_HINTS_PER_DAY) }));
+      get().saveGameState();
+    },
+
+    markTutorialComplete: () => {
+      if (get().tutorialSeen) {
+        return;
+      }
+      set({ tutorialSeen: true });
+      const prefsSnapshot = getUserPreferences();
+      saveUserPreferences({ ...prefsSnapshot, tutorialSeen: true });
+    },
+  };
+});

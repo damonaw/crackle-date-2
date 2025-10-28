@@ -37,6 +37,8 @@ const OPERATOR_ROWS: OperatorToken[][] = [
   ],
 ];
 
+const MAX_HINTS_PER_DAY = 3;
+
 const mapKeyToToken = (key: string): string | null => {
   if (key === 'x' || key === 'X') return '*';
   if (key === 's' || key === 'S') return 'sqrt(';
@@ -55,16 +57,32 @@ export default function GameScreen() {
   const score = useGameStore((state) => state.score);
   const streak = useGameStore((state) => state.streak);
   const solutions = useGameStore((state) => state.solutions);
+  const availableDates = useGameStore((state) => state.availableDates);
+  const selectDate = useGameStore((state) => state.selectDate);
+  const hintsUsed = useGameStore((state) => state.hintsUsed);
+  const incrementHintsUsed = useGameStore((state) => state.incrementHintsUsed);
+  const achievements = useGameStore((state) => state.achievements);
+  const tutorialSeen = useGameStore((state) => state.tutorialSeen);
+  const markTutorialComplete = useGameStore((state) => state.markTutorialComplete);
 
   const { themeMode, resolvedMode, cycleThemeMode, nextThemeMode } = useThemeMode();
 
   const [view, setView] = useState<ViewMode>('game');
   const [menuOpen, setMenuOpen] = useState(false);
   const [toast, setToast] = useState<{ tone: ToastTone; message: string } | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [hasPromptedTutorial, setHasPromptedTutorial] = useState(false);
 
   useEffect(() => {
     loadGameState();
   }, [loadGameState]);
+
+  useEffect(() => {
+    if (!tutorialSeen && !hasPromptedTutorial) {
+      setShowTutorial(true);
+      setHasPromptedTutorial(true);
+    }
+  }, [hasPromptedTutorial, tutorialSeen]);
 
   useEffect(() => {
     if (!toast) return;
@@ -81,6 +99,82 @@ export default function GameScreen() {
   const showToast = useCallback((tone: ToastTone, message: string) => {
     setToast({ tone, message });
   }, []);
+
+  const remainingHints = Math.max(0, MAX_HINTS_PER_DAY - hintsUsed);
+
+  const handleHint = useCallback(() => {
+    if (hintsUsed >= MAX_HINTS_PER_DAY) {
+      showToast('info', 'You have used all available hints for today.');
+      return;
+    }
+    const hint = getInputHint(equation, currentDate);
+    incrementHintsUsed();
+    showToast('info', `Hint: ${hint}`);
+  }, [currentDate, equation, hintsUsed, incrementHintsUsed, showToast]);
+
+  const handleShareSolutions = useCallback(async () => {
+    if (solutions.length === 0) {
+      showToast('info', 'Solve a puzzle before sharing.');
+      return;
+    }
+
+    if (typeof navigator === 'undefined') {
+      showToast('error', 'Sharing is not supported in this environment.');
+      return;
+    }
+
+    const orderedSolutions = solutions.slice().reverse();
+    const totalScore = orderedSolutions.reduce((total, sol) => total + sol.score, 0);
+    const summaryLines = orderedSolutions.map(
+      (solution) => `${solution.equation} (${solution.score} pts)`
+    );
+    const streakLine = streak > 0 ? `🔥 Streak: ${streak}` : null;
+    const shareText = [
+      `Crackle Date ${currentDate}`,
+      ...summaryLines,
+      `Total: ${totalScore} pts`,
+      streakLine,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    try {
+      if ('share' in navigator && typeof navigator.share === 'function') {
+        await navigator.share({ title: `Crackle Date ${currentDate}`, text: shareText });
+        showToast('success', 'Shared your solutions!');
+        return;
+      }
+
+      if ('clipboard' in navigator && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareText);
+        showToast('success', 'Copied your solutions summary!');
+        return;
+      }
+
+      throw new Error('Share API unavailable');
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        showToast('info', 'Share cancelled.');
+        return;
+      }
+      showToast('error', 'Sharing failed. Try again later.');
+    }
+  }, [currentDate, showToast, solutions, streak]);
+
+  const closeTutorial = useCallback(() => {
+    setShowTutorial(false);
+    markTutorialComplete();
+  }, [markTutorialComplete]);
+
+  const handleDateSelect = useCallback(
+    (date: string) => {
+      selectDate(date);
+      setView('game');
+      setMenuOpen(false);
+      showToast('info', `Loaded puzzle for ${date}.`);
+    },
+    [selectDate, showToast]
+  );
 
   const clearEquation = useCallback(() => {
     setEquation('');
@@ -283,6 +377,10 @@ export default function GameScreen() {
                   <span className="game-stat-label">Streak</span>
                   <span className="game-stat-value">{streak}</span>
                 </div>
+                <div className="game-stat">
+                  <span className="game-stat-label">Hints</span>
+                  <span className="game-stat-value">{remainingHints}</span>
+                </div>
                 <button type="button" className="link-button" onClick={() => setView('stats')}>
                   View stats →
                 </button>
@@ -348,6 +446,21 @@ export default function GameScreen() {
               <button type="button" className="secondary-button" onClick={removeLastChar}>
                 Backspace
               </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={handleHint}
+                disabled={remainingHints <= 0}
+              >
+                {remainingHints > 0 ? `Hint (${remainingHints})` : 'No hints left'}
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setShowTutorial(true)}
+              >
+                Tutorial
+              </button>
             </div>
           </section>
         ) : (
@@ -357,6 +470,8 @@ export default function GameScreen() {
             streak={streak}
             solutions={solutions}
             currentDate={currentDate}
+            achievements={achievements}
+            onShare={handleShareSolutions}
           />
         )}
       </main>
@@ -396,6 +511,16 @@ export default function GameScreen() {
               >
                 Stats
               </button>
+              <button
+                type="button"
+                className="sheet-link"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setShowTutorial(true);
+                }}
+              >
+                Tutorial
+              </button>
             </nav>
             <div className="sheet-section">
               <p className="sheet-section-title">Theme</p>
@@ -404,6 +529,75 @@ export default function GameScreen() {
                 {nextThemeLabel}
               </button>
             </div>
+            <div className="sheet-section">
+              <p className="sheet-section-title">Hints</p>
+              <p className="sheet-section-hint">
+                {remainingHints > 0
+                  ? `${remainingHints} hint${remainingHints === 1 ? '' : 's'} remaining today.`
+                  : 'No hints left today.'}
+              </p>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  handleHint();
+                }}
+                disabled={remainingHints <= 0}
+              >
+                Use a hint
+              </button>
+            </div>
+            <div className="sheet-section">
+              <p className="sheet-section-title">Previous puzzles</p>
+              <p className="sheet-section-hint">Jump back to a recent date.</p>
+              <div className="sheet-date-grid">
+                {availableDates.slice(0, 14).map((date) => (
+                  <button
+                    key={date}
+                    type="button"
+                    className="sheet-date-button"
+                    data-active={date === currentDate}
+                    onClick={() => handleDateSelect(date)}
+                  >
+                    {date}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTutorial && (
+        <div className="tutorial-overlay" role="dialog" aria-modal="true">
+          <div className="tutorial-card">
+            <header className="tutorial-header">
+              <h2>How to play</h2>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="Close tutorial"
+                onClick={closeTutorial}
+              >
+                ✕
+              </button>
+            </header>
+            <ol className="tutorial-steps">
+              <li>Use each digit from the date in order—no skipping or rearranging.</li>
+              <li>Add operators and parentheses to build both sides of the equation.</li>
+              <li>Press submit when you&apos;ve used all digits and added an equals sign.</li>
+              <li>Earn streaks and achievements by solving daily and boosting your score.</li>
+            </ol>
+            <footer className="tutorial-footer">
+              <button
+                type="button"
+                className="primary-button tutorial-primary-button"
+                onClick={closeTutorial}
+              >
+                Let&apos;s play
+              </button>
+            </footer>
           </div>
         </div>
       )}

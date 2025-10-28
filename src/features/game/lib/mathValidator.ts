@@ -1,5 +1,5 @@
 import { evaluate, parse } from 'mathjs';
-import type { ValidationResult, ComplexityLevel } from '../types/game';
+import type { ValidationResult, ComplexityLevel } from '../types';
 import { getDateDigits, getDigitsArray } from './dateUtils';
 import { getOperationBySymbol } from './mathOperations';
 
@@ -104,12 +104,13 @@ const validateDigitUsage = (equation: string, currentDate: string) => {
   }
 
   // Check if all required digits are used
-  const usesAllDigits = requiredDigits.length === usedDigits.length &&
+  const usesAllDigits =
+    requiredDigits.length === usedDigits.length &&
     requiredDigits.every((digit, index) => digit === usedDigits[index]);
 
   // Check if digits appear in correct order
-  const digitsInOrder = requiredDigits.every((digit, index) =>
-    index < usedDigits.length && digit === usedDigits[index]
+  const digitsInOrder = requiredDigits.every(
+    (digit, index) => index < usedDigits.length && digit === usedDigits[index]
   );
 
   let error = '';
@@ -197,4 +198,3 @@ const calculateComplexity = (equation: string): ComplexityLevel => {
   if (complexityScore <= 15) return 'complex';
   return 'advanced';
 };
-

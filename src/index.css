@@ -1,61 +1,88 @@
-/* Global CSS Reset for Mobile Web App */
+:root {
+  color-scheme: light;
+
+  --color-accent: rgb(99 102 241);
+  --color-accent-contrast: rgb(255 255 255);
+  --color-accent-glow: rgb(99 102 241 / 18%);
+  --color-accent-soft: rgb(99 102 241 / 12%);
+  --color-background: rgb(244 246 255);
+  --color-surface: rgb(255 255 255);
+  --color-surface-muted: rgb(248 250 255);
+  --color-surface-elevated: rgb(255 255 255 / 92%);
+  --color-border: rgb(208 215 226);
+  --color-border-soft: rgb(15 23 42 / 8%);
+  --color-danger: rgb(239 68 68);
+  --color-header-background: rgb(255 255 255 / 85%);
+  --color-shadow-soft: rgb(15 23 42 / 10%);
+  --color-success: rgb(34 197 94);
+  --color-text-muted: rgb(100 116 139);
+  --color-text-primary: rgb(15 23 42);
+  --color-text-secondary: rgb(71 85 105);
+  --shadow-accent: 0 16px 32px rgb(99 102 241 / 25%);
+  --shadow-soft: 0 18px 36px rgb(15 23 42 / 12%);
+  --shadow-strong: 0 22px 48px rgb(15 23 42 / 16%);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-accent: rgb(129 140 248);
+  --color-accent-contrast: rgb(15 23 42);
+  --color-accent-glow: rgb(129 140 248 / 28%);
+  --color-accent-soft: rgb(129 140 248 / 18%);
+  --color-background: rgb(15 23 42);
+  --color-surface: rgb(22 33 64);
+  --color-surface-muted: rgb(30 41 76);
+  --color-surface-elevated: rgb(42 56 98 / 88%);
+  --color-border: rgb(148 163 184 / 35%);
+  --color-border-soft: rgb(148 163 184 / 20%);
+  --color-danger: rgb(248 113 113);
+  --color-header-background: rgb(15 23 42 / 78%);
+  --color-shadow-soft: rgb(2 6 23 / 55%);
+  --color-success: rgb(74 222 128);
+  --color-text-muted: rgb(148 163 184);
+  --color-text-primary: rgb(248 250 252);
+  --color-text-secondary: rgb(203 213 245);
+  --shadow-accent: 0 20px 40px rgb(129 140 248 / 50%);
+  --shadow-soft: 0 20px 40px rgb(2 6 23 / 65%);
+  --shadow-strong: 0 26px 56px rgb(2 6 23 / 70%);
+}
+
 * {
   box-sizing: border-box;
 }
 
-html,
 body {
-  font-family: Inter, Roboto, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family:
+    Inter,
+    Roboto,
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
   -moz-osx-font-smoothing: grayscale;
-  height: 100%;
-  margin: 0;
-  overflow-x: hidden;
-  padding: 0;
-  width: 100%;
-}
-
-#root {
+  -webkit-font-smoothing: antialiased;
   margin: 0;
   min-height: 100vh;
-  padding: 0;
-  width: 100%;
 }
 
-/* Remove default link styles that might interfere */
 a {
   color: inherit;
   text-decoration: none;
 }
 
-/* Ensure full width for common elements */
-/* stylelint-disable selector-class-pattern */
-.MuiAppBar-root {
-  margin: 0 !important;
-  width: 100% !important;
+button,
+input,
+textarea {
+  font: inherit;
 }
 
-.MuiToolbar-root {
-  padding-left: 16px !important;
-  padding-right: 16px !important;
-  width: 100% !important;
+#root {
+  min-height: 100vh;
 }
 
-/* Prevent text selection on touch devices for better UX */
-.MuiChip-root {
-  user-select: none;
-}
-/* stylelint-enable selector-class-pattern */
-
-/* Improve touch targets */
-@media (width <= 768px) {
-  /* stylelint-disable selector-class-pattern */
-  .MuiChip-root {
-    min-height: 44px;
-  }
-
-  .MuiButton-root {
-    min-height: 44px;
-  }
-  /* stylelint-enable selector-class-pattern */
+.math-equation {
+  font-variant-numeric: tabular-nums;
 }

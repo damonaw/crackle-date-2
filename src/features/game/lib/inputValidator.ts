@@ -17,7 +17,7 @@ export const validateEquationInput = (
   const usedDigits: number[] = [];
   const digitMatches = currentEquation.match(/\d/g);
   if (digitMatches) {
-    usedDigits.push(...digitMatches.map(d => parseInt(d)));
+    usedDigits.push(...digitMatches.map((d) => parseInt(d)));
   }
 
   // Check if adding a new digit
@@ -29,7 +29,7 @@ export const validateEquationInput = (
     if (nextExpectedDigitIndex >= requiredDigits.length) {
       return {
         isValid: false,
-        error: 'All required digits have been used'
+        error: 'All required digits have been used',
       };
     }
 
@@ -38,7 +38,7 @@ export const validateEquationInput = (
     if (newDigit !== expectedDigit) {
       return {
         isValid: false,
-        error: `Expected digit ${expectedDigit}, got ${newDigit}`
+        error: `Expected digit ${expectedDigit}, got ${newDigit}`,
       };
     }
 
@@ -58,7 +58,7 @@ export const validateEquationInput = (
 
   return {
     isValid: false,
-    error: `Invalid character: ${newInput}`
+    error: `Invalid character: ${newInput}`,
   };
 };
 
@@ -67,7 +67,7 @@ export const getNextAllowedInputs = (currentEquation: string, currentDate: strin
   const usedDigits: number[] = [];
   const digitMatches = currentEquation.match(/\d/g);
   if (digitMatches) {
-    usedDigits.push(...digitMatches.map(d => parseInt(d)));
+    usedDigits.push(...digitMatches.map((d) => parseInt(d)));
   }
 
   const allowedInputs: string[] = [];
@@ -84,13 +84,17 @@ export const getNextAllowedInputs = (currentEquation: string, currentDate: strin
   return allowedInputs;
 };
 
-export const filterInput = (input: string, currentEquation: string, currentDate: string): string => {
+export const filterInput = (
+  input: string,
+  currentEquation: string,
+  currentDate: string
+): string => {
   const allowedInputs = getNextAllowedInputs(currentEquation, currentDate);
 
   // Filter input to only include allowed characters
   return input
     .split('')
-    .filter(char => allowedInputs.includes(char))
+    .filter((char) => allowedInputs.includes(char))
     .join('');
 };
 
@@ -99,7 +103,7 @@ export const getInputHint = (currentEquation: string, currentDate: string): stri
   const usedDigits: number[] = [];
   const digitMatches = currentEquation.match(/\d/g);
   if (digitMatches) {
-    usedDigits.push(...digitMatches.map(d => parseInt(d)));
+    usedDigits.push(...digitMatches.map((d) => parseInt(d)));
   }
 
   if (usedDigits.length < requiredDigits.length) {

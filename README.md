@@ -4,6 +4,10 @@ A daily math puzzle game where you create equations using today's date digits!
 
 ![PWA Ready](https://img.shields.io/badge/PWA-Ready-success) ![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue) ![React](https://img.shields.io/badge/React-19-blue) ![Mobile First](https://img.shields.io/badge/Mobile-First-green)
 
+## 🔗 Live Demo
+
+- **GitHub Pages**: https://damonaw.github.io/crackle-date-2/
+
 ## 🎯 How to Play
 
 **Goal**: Create a valid mathematical equation using ALL digits from today's date in exact order.
@@ -42,8 +46,8 @@ For **September 18, 2025** (9-18-2025):
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/crackle-date.git
-cd crackle-date
+git clone https://github.com/damonaw/crackle-date-2.git
+cd crackle-date-2
 
 # Install dependencies
 npm install
@@ -86,13 +90,12 @@ npm run format     # Format code with Prettier
 ## 🏗️ Technology Stack
 
 - **Frontend**: React 19 + TypeScript
-- **UI Library**: Material-UI v7
 - **State Management**: Zustand
 - **Math Engine**: mathjs (secure expression evaluation)
 - **Math Rendering**: KaTeX (LaTeX-quality notation)
-- **Build Tool**: Vite
+- **Styling**: Native CSS modules + design tokens in `src/index.css`
+- **Build Tooling**: Vite + TypeScript project references
 - **Testing**: Vitest + React Testing Library
-- **Styling**: Emotion (CSS-in-JS)
 
 ## 📱 Mobile Experience
 
@@ -121,21 +124,17 @@ npm run test:run
 ### Project Structure
 ```
 src/
-├── components/           # React components
-│   ├── NYTGameCard.tsx  # Main game interface
-│   ├── Stats.tsx        # Statistics display
-│   └── MathEquation.tsx # Math notation rendering
-├── stores/              # Zustand state management
-│   └── gameStore.ts     # Game state and persistence
-├── utils/               # Game logic utilities
-│   ├── dateUtils.ts     # Date handling
-│   ├── mathValidator.ts # Equation validation
-│   ├── scoring.ts       # Scoring algorithm
-│   └── localStorage.ts  # Data persistence
-├── types/               # TypeScript definitions
-│   └── game.ts          # Game-related types
-└── hooks/               # Custom React hooks
-    └── useTheme.ts      # Theme management
+├── app/                     # Root App composition
+├── features/
+│   ├── game/                # Gameplay UI, Zustand store, and domain logic
+│   │   ├── components/
+│   │   ├── lib/
+│   │   └── state/
+│   ├── math/                # KaTeX equation renderer
+│   ├── stats/               # Stats modal and layout
+│   └── theme/               # Theme detection hook
+├── index.css                # Global tokens + resets
+└── main.tsx                 # Vite/React bootstrapper
 ```
 
 ### Code Quality

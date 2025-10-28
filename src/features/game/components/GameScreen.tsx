@@ -387,24 +387,6 @@ export default function GameScreen() {
               </div>
             </div>
 
-            <div className="equation-display" role="textbox" aria-label="Current equation">
-              {equation || <span className="equation-placeholder">Build your equation</span>}
-            </div>
-
-            <div className="equation-actions">
-              <button type="button" className="secondary-button" onClick={clearEquation}>
-                Clear
-              </button>
-              <button
-                type="button"
-                className="primary-button"
-                onClick={submitEquation}
-                disabled={!isEquationReadyForSubmission()}
-              >
-                Submit
-              </button>
-            </div>
-
             <div className="digit-pad" aria-label="Date digits">
               {digitsArray.map((digit, index) => {
                 const isUsed = index < usedDigits.length;
@@ -424,6 +406,10 @@ export default function GameScreen() {
               })}
             </div>
 
+            <div className="equation-display" role="textbox" aria-label="Current equation">
+              {equation || <span className="equation-placeholder">Build your equation</span>}
+            </div>
+
             <div className="operator-pad" aria-label="Math operators">
               {OPERATOR_ROWS.map((row, rowIndex) => (
                 <div className="operator-row" key={`row-${rowIndex}`}>
@@ -440,6 +426,20 @@ export default function GameScreen() {
                   ))}
                 </div>
               ))}
+            </div>
+
+            <div className="equation-actions">
+              <button type="button" className="secondary-button" onClick={clearEquation}>
+                Clear
+              </button>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={submitEquation}
+                disabled={!isEquationReadyForSubmission()}
+              >
+                Submit
+              </button>
             </div>
 
             <div className="quick-actions">

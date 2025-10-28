@@ -1,37 +1,30 @@
 import { create } from 'zustand';
-import type { GameState } from '../types/game';
-import { getTodaysGameDate } from '../utils/dateUtils';
-import { 
-  getGameData, 
-  saveGameData, 
-  getGameStats, 
+import type { GameState } from '../types';
+import { getTodaysGameDate } from '../lib/dateUtils';
+import {
+  getGameData,
+  saveGameData,
+  getGameStats,
   updateGameStats,
   getUserPreferences,
   saveUserPreferences,
-  type GameStats, type ThemeMode 
-} from '../utils/localStorage';
+  type GameStats,
+  type ThemeMode,
+} from '../lib/localStorage';
 
 interface GameStore extends GameState {
-  // Game state actions
   setEquation: (equation: string) => void;
   setValid: (isValid: boolean) => void;
   addSolution: (equation: string, score: number) => void;
   resetGame: () => void;
   setScore: (score: number) => void;
-  
-  // Statistics
   gameStats: GameStats;
   updateStats: (won: boolean, score: number) => void;
-  
-  // Persistence
   loadGameState: () => void;
   saveGameState: () => void;
-  
-  // User preferences
-  darkMode: boolean;
-  toggleDarkMode: () => void;
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
+  cycleThemeMode: () => void;
 }
 
 const initialState: GameState = {
@@ -43,17 +36,15 @@ const initialState: GameState = {
   solutions: [],
 };
 
+const THEME_SEQUENCE: ThemeMode[] = ['system', 'light', 'dark'];
+
 export const useGameStore = create<GameStore>((set, get) => ({
   ...initialState,
-  
-  // Initialize stats and preferences
   gameStats: getGameStats(),
-  darkMode: getUserPreferences().darkMode,
-  themeMode: getUserPreferences().themeMode || 'system',
+  themeMode: getUserPreferences().themeMode ?? 'system',
 
   setEquation: (equation: string) => {
     set({ equation });
-    // Auto-save game state when equation changes
     setTimeout(() => get().saveGameState(), 100);
   },
 
@@ -62,23 +53,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   addSolution: (equation: string, score: number) => {
-    const currentSolutions = get().solutions;
     const newSolution = {
       equation,
       score,
       timestamp: new Date(),
-      complexity: 'simple' as const, // Will be calculated by validator
+      complexity: 'simple' as const,
     };
 
-    set({
-      solutions: [...currentSolutions, newSolution],
-      score: get().score + score,
-    });
-    
-    // Update statistics when solution is added
+    set((state) => ({
+      solutions: [...state.solutions, newSolution],
+      score: state.score + score,
+    }));
+
     get().updateStats(true, score);
-    
-    // Save game state
     get().saveGameState();
   },
 
@@ -87,8 +74,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   updateStats: (won: boolean, score: number) => {
-    const currentDate = get().currentDate;
-    const updatedStats = updateGameStats(won, score, currentDate);
+    const updatedStats = updateGameStats(won, score, get().currentDate);
     set({ gameStats: updatedStats });
   },
 
@@ -96,8 +82,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       ...initialState,
       currentDate: getTodaysGameDate(),
-      gameStats: get().gameStats, // Preserve stats
-      darkMode: get().darkMode, // Preserve preferences
+      gameStats: get().gameStats,
       themeMode: get().themeMode,
     });
     get().saveGameState();
@@ -106,16 +91,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
   loadGameState: () => {
     const savedGame = getGameData();
     const todaysDate = getTodaysGameDate();
-    
+
     if (savedGame && savedGame.currentDate === todaysDate) {
-      // Load today's game if it exists, converting stored solutions to proper Solution type
-      const convertedSolutions = savedGame.solutions.map(sol => ({
+      const convertedSolutions = savedGame.solutions.map((sol) => ({
         equation: sol.equation,
         score: sol.score,
         timestamp: new Date(sol.timestamp),
-        complexity: 'simple' as const, // Default complexity for loaded solutions
+        complexity: 'simple' as const,
       }));
-      
+
       set({
         currentDate: savedGame.currentDate,
         equation: savedGame.equation,
@@ -124,33 +108,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
         score: convertedSolutions.reduce((total, sol) => total + sol.score, 0),
       });
     } else {
-      // Start fresh game for today
       set({
         ...initialState,
         currentDate: todaysDate,
         gameStats: get().gameStats,
-        darkMode: get().darkMode,
       });
       get().saveGameState();
     }
-    
-    // Load stats and preferences
-    set({ 
+
+    set({
       gameStats: getGameStats(),
-      darkMode: getUserPreferences().darkMode,
-      themeMode: getUserPreferences().themeMode || 'system',
+      themeMode: getUserPreferences().themeMode ?? 'system',
     });
   },
 
   saveGameState: () => {
     const state = get();
-    // Convert solutions to storage format (Date to string)
-    const storageSolutions = state.solutions.map(sol => ({
+    const storageSolutions = state.solutions.map((sol) => ({
       equation: sol.equation,
       score: sol.score,
       timestamp: sol.timestamp.toISOString(),
     }));
-    
+
     const gameData = {
       currentDate: state.currentDate,
       equation: state.equation,
@@ -158,22 +137,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       isValid: state.isValid,
       completedToday: state.solutions.length > 0,
     };
-    
+
     saveGameData(gameData);
   },
 
-  toggleDarkMode: () => {
-    const newDarkMode = !get().darkMode;
-    set({ darkMode: newDarkMode, themeMode: newDarkMode ? 'dark' : 'light' });
-    
-    // Save preference
-    const prefs = getUserPreferences();
-    saveUserPreferences({ ...prefs, darkMode: newDarkMode, themeMode: newDarkMode ? 'dark' : 'light' });
-  },
   setThemeMode: (mode: ThemeMode) => {
-    const dark = mode === 'dark' ? true : mode === 'light' ? false : get().darkMode;
-    set({ themeMode: mode, darkMode: dark });
+    set({ themeMode: mode });
     const prefs = getUserPreferences();
-    saveUserPreferences({ ...prefs, themeMode: mode, darkMode: dark });
+    saveUserPreferences({ ...prefs, themeMode: mode });
+  },
+
+  cycleThemeMode: () => {
+    const current = get().themeMode;
+    const index = THEME_SEQUENCE.indexOf(current);
+    const next = THEME_SEQUENCE[(index + 1) % THEME_SEQUENCE.length];
+    get().setThemeMode(next);
   },
 }));

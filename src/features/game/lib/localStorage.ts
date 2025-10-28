@@ -113,13 +113,13 @@ export const getGameStats = (): GameStats => {
 export const saveGameStats = (stats: GameStats): boolean => {
   // Recalculate win percentage
   stats.winPercentage = stats.gamesPlayed > 0 ? (stats.gamesWon / stats.gamesPlayed) * 100 : 0;
-  
+
   return saveToStorage(STORAGE_KEYS.GAME_STATS, stats);
 };
 
 export const updateGameStats = (won: boolean, score: number, date: string): GameStats => {
   const stats = getGameStats();
-  
+
   // Update basic counts
   stats.gamesPlayed += 1;
   if (won) {
@@ -138,10 +138,10 @@ export const updateGameStats = (won: boolean, score: number, date: string): Game
   if (won) {
     const scoreKey = score.toString();
     stats.scoreDistribution[scoreKey] = (stats.scoreDistribution[scoreKey] || 0) + 1;
-    
+
     // Recalculate average score
     const totalScores = Object.entries(stats.scoreDistribution).reduce(
-      (sum, [scoreStr, count]) => sum + (parseInt(scoreStr) * count),
+      (sum, [scoreStr, count]) => sum + parseInt(scoreStr) * count,
       0
     );
     stats.averageScore = totalScores / stats.gamesWon;
@@ -152,7 +152,7 @@ export const updateGameStats = (won: boolean, score: number, date: string): Game
 
   // Save updated stats
   saveGameStats(stats);
-  
+
   return stats;
 };
 
@@ -169,12 +169,12 @@ export const getGameData = (): GameData | null => {
   };
 
   const data = loadFromStorage(STORAGE_KEYS.GAME_DATA, defaultData);
-  
+
   // Return null if no valid data exists
   if (!data.currentDate) {
     return null;
   }
-  
+
   return data;
 };
 
@@ -252,19 +252,19 @@ export const exportGameData = (): string => {
 export const importGameData = (jsonData: string): boolean => {
   try {
     const importData = JSON.parse(jsonData);
-    
+
     if (importData.stats) {
       saveGameStats(importData.stats);
     }
-    
+
     if (importData.gameData) {
       saveGameData(importData.gameData);
     }
-    
+
     if (importData.prefs) {
       saveUserPreferences(importData.prefs);
     }
-    
+
     return true;
   } catch (error) {
     console.error('Failed to import game data:', error);

@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { parse } from 'mathjs';
-import { useTheme } from '../hooks/useTheme';
 
-// KaTeX type declaration
 declare global {
   interface Window {
     katex?: {
@@ -26,12 +24,19 @@ interface MathEquationProps {
   className?: string;
 }
 
+const getCssVariable = (name: string, fallback: string) => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return fallback;
+  }
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name);
+  return value.trim() || fallback;
+};
+
 export default function MathEquation({
   equation,
   displayMode = false,
   className = '',
 }: MathEquationProps) {
-  const { theme } = useTheme();
   const mathRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -43,13 +48,15 @@ export default function MathEquation({
       return;
     }
 
+    const errorColor = getCssVariable('--color-danger', 'rgb(239, 68, 68)');
+
     if (typeof window !== 'undefined' && window.katex) {
       try {
         const latexEquation = convertToLatex(equation);
         window.katex.render(latexEquation, element, {
           displayMode,
           throwOnError: false,
-          errorColor: theme.palette.error.main,
+          errorColor,
           strict: false,
         });
         return;
@@ -59,7 +66,7 @@ export default function MathEquation({
     }
 
     element.innerHTML = formatMathFallback(equation);
-  }, [equation, displayMode, theme]);
+  }, [equation, displayMode]);
 
   return <span ref={mathRef} className={className} />;
 }

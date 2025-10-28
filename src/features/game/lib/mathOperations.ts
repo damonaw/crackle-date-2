@@ -1,4 +1,4 @@
-import type { MathOperation } from '../types/game';
+import type { MathOperation } from '../types';
 
 export const MATH_OPERATIONS: MathOperation[] = [
   { symbol: '+', name: 'Add', complexity: 1, precedence: 1 },

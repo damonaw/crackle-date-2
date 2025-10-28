@@ -1,4 +1,4 @@
-import type { ComplexityLevel, ValidationResult } from '../types/game';
+import type { ComplexityLevel, ValidationResult } from '../types';
 
 export const calculateScore = (validationResult: ValidationResult): number => {
   if (!validationResult.isValid) {

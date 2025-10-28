@@ -12,7 +12,7 @@ export default defineConfig(({ command }) => ({
     port: 5173
   },
   build: {
-    outDir: 'dist',
+    outDir: 'dist/crackle-date-2',
     emptyOutDir: true
   }
 }))

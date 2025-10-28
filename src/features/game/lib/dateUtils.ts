@@ -1,12 +1,23 @@
 import type { DateDigits } from '../types';
 
 export const getCurrentDateEST = (): Date => {
-  const now = new Date(2025, 9, 10);
-  // Convert to EST (UTC-5) or EDT (UTC-4) automatically
-  const estOffset = -5 * 60; // EST is UTC-5
-  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-  const est = new Date(utc + estOffset * 60000);
-  return est;
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  });
+
+  const parts = formatter.formatToParts(now);
+  const getPart = (type: 'year' | 'month' | 'day') =>
+    parts.find((part) => part.type === type)?.value ?? '0';
+
+  const year = Number.parseInt(getPart('year'), 10);
+  const month = Number.parseInt(getPart('month'), 10);
+  const day = Number.parseInt(getPart('day'), 10);
+
+  return new Date(year, month - 1, day);
 };
 
 export const formatDateForGame = (date: Date): string => {
@@ -21,9 +32,9 @@ export const getDateDigits = (dateString: string): DateDigits => {
   // Format: M-DD-YYYY (e.g., "9-17-2025")
   const [monthStr, dayStr, yearStr] = dateString.split('-');
 
-  const month = parseInt(monthStr);
-  const day = parseInt(dayStr);
-  const year = parseInt(yearStr);
+  const month = Number.parseInt(monthStr, 10);
+  const day = Number.parseInt(dayStr, 10);
+  const year = Number.parseInt(yearStr, 10);
 
   return {
     month,

@@ -1,3 +1,5 @@
+import type { ComplexityLevel } from '../types';
+
 /**
  * Local Storage utilities for Crackle Date game
  * Handles saving and loading game data, statistics, and user preferences
@@ -21,6 +23,7 @@ export interface GameData {
     equation: string;
     score: number;
     timestamp: string;
+    complexity?: ComplexityLevel;
   }>;
   isValid: boolean;
   completedToday: boolean;

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GameState } from '../types';
+import type { ComplexityLevel, GameState } from '../types';
 import { getTodaysGameDate } from '../lib/dateUtils';
 import {
   getGameData,
@@ -15,7 +15,7 @@ import {
 interface GameStore extends GameState {
   setEquation: (equation: string) => void;
   setValid: (isValid: boolean) => void;
-  addSolution: (equation: string, score: number) => void;
+  addSolution: (equation: string, score: number, complexity: ComplexityLevel) => void;
   resetGame: () => void;
   setScore: (score: number) => void;
   gameStats: GameStats;
@@ -52,12 +52,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ isValid });
   },
 
-  addSolution: (equation: string, score: number) => {
+  addSolution: (equation: string, score: number, complexity: ComplexityLevel) => {
     const newSolution = {
       equation,
       score,
       timestamp: new Date(),
-      complexity: 'simple' as const,
+      complexity,
     };
 
     set((state) => ({
@@ -97,7 +97,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         equation: sol.equation,
         score: sol.score,
         timestamp: new Date(sol.timestamp),
-        complexity: 'simple' as const,
+        complexity: sol.complexity ?? 'simple',
       }));
 
       set({
@@ -128,6 +128,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       equation: sol.equation,
       score: sol.score,
       timestamp: sol.timestamp.toISOString(),
+      complexity: sol.complexity,
     }));
 
     const gameData = {

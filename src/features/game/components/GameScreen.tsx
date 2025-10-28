@@ -167,7 +167,7 @@ export default function GameScreen() {
     if (result.isValid) {
       const scoreValue = calculateScore(result);
       const description = getScoreDescription(scoreValue, result.complexity);
-      addSolution(equation, scoreValue);
+      addSolution(equation, scoreValue, result.complexity);
       showToast('success', `🎉 ${description}`);
       clearEquation();
     } else {

@@ -31,6 +31,8 @@ interface GameStore extends GameState {
   incrementHintsUsed: () => void;
   tutorialSeen: boolean;
   markTutorialComplete: () => void;
+  dragAndDropBeta: boolean;
+  setDragAndDropBeta: (enabled: boolean) => void;
 }
 
 const RECENT_DATES_TO_SHOW = 7;
@@ -99,6 +101,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     gameStats: stats,
     themeMode: prefs.themeMode ?? 'system',
     tutorialSeen: prefs.tutorialSeen ?? false,
+    dragAndDropBeta: prefs.dragAndDropBeta ?? false,
     streak: stats.currentStreak,
 
     setEquation: (equation: string) => {
@@ -181,6 +184,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         achievements: evaluateAchievements(statsSnapshot),
         themeMode: prefsSnapshot.themeMode ?? 'system',
         tutorialSeen: prefsSnapshot.tutorialSeen ?? false,
+        dragAndDropBeta: prefsSnapshot.dragAndDropBeta ?? false,
       });
 
       get().saveGameState();
@@ -214,6 +218,12 @@ export const useGameStore = create<GameStore>((set, get) => {
       set({ themeMode: mode });
       const prefsSnapshot = getUserPreferences();
       saveUserPreferences({ ...prefsSnapshot, themeMode: mode });
+    },
+
+    setDragAndDropBeta: (enabled: boolean) => {
+      set({ dragAndDropBeta: enabled });
+      const prefsSnapshot = getUserPreferences();
+      saveUserPreferences({ ...prefsSnapshot, dragAndDropBeta: enabled });
     },
 
     cycleThemeMode: () => {

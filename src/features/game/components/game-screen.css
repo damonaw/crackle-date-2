@@ -303,10 +303,12 @@
   font-size: 1.1rem;
   font-weight: 700;
   padding: 0.9rem;
+  touch-action: none;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
     background 0.2s ease;
+  user-select: none;
 }
 
 .digit-button[data-state='available'] {
@@ -347,9 +349,11 @@
   font-size: 1.1rem;
   font-weight: 600;
   padding: 0.85rem;
+  touch-action: none;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
+  user-select: none;
 }
 
 .operator-button:disabled {

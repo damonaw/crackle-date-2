@@ -56,7 +56,6 @@ export interface UserPreferences {
   soundEnabled: boolean;
   themeMode?: ThemeMode; // new preferred field
   tutorialSeen?: boolean;
-  dragAndDropBeta?: boolean;
 }
 
 const STORAGE_KEYS = {
@@ -397,7 +396,6 @@ export const getUserPreferences = (): UserPreferences => {
     soundEnabled: true,
     themeMode: 'system',
     tutorialSeen: false,
-    dragAndDropBeta: false,
   };
 
   const prefs = loadFromStorage(STORAGE_KEYS.USER_PREFS, defaultPrefs);
@@ -408,9 +406,6 @@ export const getUserPreferences = (): UserPreferences => {
   if (typeof prefs.tutorialSeen !== 'boolean') {
     prefs.tutorialSeen = false;
   }
-  if (typeof prefs.dragAndDropBeta !== 'boolean') {
-    prefs.dragAndDropBeta = false;
-  }
   return prefs;
 };
 
@@ -419,7 +414,6 @@ export const saveUserPreferences = (prefs: UserPreferences): boolean => {
   const toSave = {
     ...prefs,
     darkMode: prefs.themeMode ? prefs.themeMode === 'dark' : prefs.darkMode,
-    dragAndDropBeta: prefs.dragAndDropBeta ?? false,
   };
   return saveToStorage(STORAGE_KEYS.USER_PREFS, toSave);
 };

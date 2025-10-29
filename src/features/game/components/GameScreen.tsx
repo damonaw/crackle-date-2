@@ -96,8 +96,6 @@ export default function GameScreen() {
   const achievements = useGameStore((state) => state.achievements);
   const tutorialSeen = useGameStore((state) => state.tutorialSeen);
   const markTutorialComplete = useGameStore((state) => state.markTutorialComplete);
-  const dragAndDropBeta = useGameStore((state) => state.dragAndDropBeta);
-  const setDragAndDropBeta = useGameStore((state) => state.setDragAndDropBeta);
 
   const { themeMode, resolvedMode, cycleThemeMode, nextThemeMode } = useThemeMode();
 
@@ -133,15 +131,6 @@ export default function GameScreen() {
   const showToast = useCallback((tone: ToastTone, message: string) => {
     setToast({ tone, message });
   }, []);
-
-  const toggleDragAndDropBeta = useCallback(() => {
-    const nextValue = !dragAndDropBeta;
-    setDragAndDropBeta(nextValue);
-    showToast(
-      'info',
-      nextValue ? 'Enabled drag and drop builder (beta).' : 'Disabled drag and drop builder.'
-    );
-  }, [dragAndDropBeta, setDragAndDropBeta, showToast]);
 
   const remainingHints = Math.max(0, MAX_HINTS_PER_DAY - hintsUsed);
 
@@ -590,15 +579,6 @@ export default function GameScreen() {
                 disabled={remainingHints <= 0}
               >
                 Use a hint
-              </button>
-            </div>
-            <div className="sheet-section">
-              <p className="sheet-section-title">Experimental</p>
-              <p className="sheet-section-hint">
-                Drag and drop builder is {dragAndDropBeta ? 'enabled' : 'disabled'}.
-              </p>
-              <button type="button" className="secondary-button" onClick={toggleDragAndDropBeta}>
-                {dragAndDropBeta ? 'Disable drag & drop' : 'Enable drag & drop'}
               </button>
             </div>
             <div className="sheet-section">

@@ -39,6 +39,38 @@ const OPERATOR_ROWS: OperatorToken[][] = [
 
 const MAX_HINTS_PER_DAY = 3;
 
+const SHARE_OPERATOR_TOKENS: OperatorToken[] = [
+  { token: '+', label: '+' },
+  { token: '-', label: '−' },
+  { token: '*', label: '×' },
+  { token: '/', label: '÷' },
+  { token: '^', label: '^' },
+  { token: '%', label: '%' },
+  { token: 'sqrt(', label: '√' },
+  { token: 'abs(', label: '|x|' },
+  { token: '!', label: '!' },
+  { token: '(', label: '(' },
+  { token: ')', label: ')' },
+];
+
+const formatOperatorsUsed = (equation: string): string => {
+  const usedLabels = new Set<string>();
+
+  SHARE_OPERATOR_TOKENS.forEach(({ token, label }) => {
+    if (equation.includes(token)) {
+      usedLabels.add(label);
+    }
+  });
+
+  if (usedLabels.size === 0) {
+    return 'none';
+  }
+
+  return SHARE_OPERATOR_TOKENS.filter(({ label }) => usedLabels.has(label))
+    .map(({ label }) => label)
+    .join(', ');
+};
+
 const mapKeyToToken = (key: string): string | null => {
   if (key === 'x' || key === 'X') return '*';
   if (key === 's' || key === 'S') return 'sqrt(';
@@ -125,9 +157,10 @@ export default function GameScreen() {
 
     const orderedSolutions = solutions.slice().reverse();
     const totalScore = orderedSolutions.reduce((total, sol) => total + sol.score, 0);
-    const summaryLines = orderedSolutions.map(
-      (solution) => `${solution.equation} (${solution.score} pts)`
-    );
+    const summaryLines = orderedSolutions.map((solution) => {
+      const operatorsUsed = formatOperatorsUsed(solution.equation);
+      return `${solution.score} pts • Operators: ${operatorsUsed}`;
+    });
     const streakLine = streak > 0 ? `🔥 Streak: ${streak}` : null;
     const shareText = [
       `Crackle Date ${currentDate}`,

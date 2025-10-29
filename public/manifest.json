@@ -2,12 +2,12 @@
   "name": "Crackle Date - Daily Math Puzzle",
   "short_name": "Crackle Date",
   "description": "Daily math puzzle game using today's date digits",
-  "start_url": "/crackle-date-2/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#FAFAFA",
   "theme_color": "#6200EE",
   "orientation": "portrait-primary",
-  "scope": "/crackle-date-2/",
+  "scope": "./",
   "icons": [
     {
       "src": "icon.svg",

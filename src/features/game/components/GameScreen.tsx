@@ -42,6 +42,8 @@ const MAX_HINTS_PER_DAY = 3;
 
 const LONG_PRESS_MS = 180;
 const MOVE_THRESHOLD_PX = 6;
+const RETURN_ANIMATION_MS = 220;
+const REMOVE_ANIMATION_MS = 180;
 
 type EquationTokenType = 'digit' | 'operator' | 'function' | 'paren' | 'equals' | 'factorial';
 
@@ -51,16 +53,30 @@ type EquationToken = {
   type: EquationTokenType;
 };
 
-type DragSource =
-  | { type: 'digit-pad'; token: string; label: string }
-  | { type: 'operator-pad'; token: string; label: string }
-  | { type: 'equation'; token: EquationToken; index: number };
+type DigitPadDragSource = {
+  type: 'digit-pad';
+  token: string;
+  label: string;
+  index: number;
+  isNext: boolean;
+};
+
+type OperatorPadDragSource = { type: 'operator-pad'; token: string; label: string };
+
+type EquationDragSource = {
+  type: 'equation';
+  token: EquationToken;
+  index: number;
+};
+
+type DragSource = DigitPadDragSource | OperatorPadDragSource | EquationDragSource;
 
 type DragRuntime = {
   pointerId: number;
   source: DragSource;
   startPoint: { x: number; y: number };
   lastPoint: { x: number; y: number };
+  originPoint: { x: number; y: number };
   status: 'pressing' | 'dragging';
   pressStart: number;
   longPressTimeout?: number;
@@ -72,6 +88,9 @@ type DragOverlayState = {
   x: number;
   y: number;
   source: DragSource;
+  origin: { x: number; y: number };
+  isReturning?: boolean;
+  isRemoving?: boolean;
 };
 
 const getTokenDisplay = (value: string): string => {
@@ -153,6 +172,55 @@ const mapKeyToToken = (key: string): string | null => {
   return null;
 };
 
+const describeTokenForAnnounce = (source: DragSource): string => {
+  const resolveLabel = (token: string): string => {
+    switch (token) {
+      case '+':
+        return 'plus';
+      case '-':
+        return 'minus';
+      case '*':
+        return 'multiply';
+      case '/':
+        return 'divide';
+      case '^':
+        return 'exponent';
+      case '%':
+        return 'modulus';
+      case 'sqrt(':
+        return 'square root';
+      case 'abs(':
+        return 'absolute value';
+      case '!':
+        return 'factorial';
+      case '=':
+        return 'equals sign';
+      case '(': {
+        return 'opening parenthesis';
+      }
+      case ')': {
+        return 'closing parenthesis';
+      }
+      default:
+        return token;
+    }
+  };
+
+  if (source.type === 'digit-pad') {
+    return `digit ${source.label}`;
+  }
+
+  if (source.type === 'operator-pad') {
+    return resolveLabel(source.token);
+  }
+
+  if (source.token.type === 'digit') {
+    return `digit ${source.token.display}`;
+  }
+
+  return resolveLabel(source.token.value);
+};
+
 export default function GameScreen() {
   const currentDate = useGameStore((state) => state.currentDate);
   const equation = useGameStore((state) => state.equation);
@@ -183,6 +251,7 @@ export default function GameScreen() {
   const [dragOverlay, setDragOverlay] = useState<DragOverlayState | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [isOverEquation, setIsOverEquation] = useState(false);
+  const [liveMessage, setLiveMessage] = useState('');
 
   const equationRef = useRef<HTMLDivElement | null>(null);
   const tokenRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -191,6 +260,7 @@ export default function GameScreen() {
   const hoverIndexRef = useRef<number | null>(null);
   const isOverEquationRef = useRef(false);
   const tokensRef = useRef<EquationToken[]>([]);
+  const dragOverlayRef = useRef<DragOverlayState | null>(null);
 
   useEffect(() => {
     loadGameState();
@@ -220,8 +290,24 @@ export default function GameScreen() {
     tokensRef.current = equationTokens;
   }, [equationTokens]);
 
+  useEffect(() => {
+    dragOverlayRef.current = dragOverlay;
+  }, [dragOverlay]);
+
+  useEffect(() => {
+    if (!liveMessage) {
+      return;
+    }
+    const timeout = window.setTimeout(() => setLiveMessage(''), 900);
+    return () => window.clearTimeout(timeout);
+  }, [liveMessage]);
+
   const showToast = useCallback((tone: ToastTone, message: string) => {
     setToast({ tone, message });
+  }, []);
+
+  const announce = useCallback((message: string) => {
+    setLiveMessage((previous) => (previous === message ? `${message}\u200b` : message));
   }, []);
 
   const attemptEquationUpdate = useCallback(
@@ -304,6 +390,7 @@ export default function GameScreen() {
     }
     dragRuntimeRef.current = null;
     setDragOverlay(null);
+    dragOverlayRef.current = null;
     setHoverIndex(null);
     hoverIndexRef.current = null;
     setIsOverEquation(false);
@@ -351,6 +438,38 @@ export default function GameScreen() {
       }
     }
 
+    const runtime = dragRuntimeRef.current;
+    if (runtime?.status === 'dragging') {
+      const { source } = runtime;
+      if (source.type === 'digit-pad') {
+        const digitsPlaced = tokens.filter((token) => token.type === 'digit').length;
+        nextIndex = Math.max(Math.min(nextIndex, digitsPlaced), digitsPlaced);
+      } else if (source.type === 'equation' && source.token.type === 'digit') {
+        const currentIndex = source.index;
+        let previousDigitIndex = -1;
+        let nextDigitIndex = tokens.length;
+
+        for (let index = 0; index < tokens.length; index += 1) {
+          if (index === currentIndex) {
+            continue;
+          }
+          if (tokens[index].type !== 'digit') {
+            continue;
+          }
+          if (index < currentIndex) {
+            previousDigitIndex = index;
+            continue;
+          }
+          nextDigitIndex = index;
+          break;
+        }
+
+        const minIndex = previousDigitIndex >= 0 ? previousDigitIndex + 1 : 0;
+        const maxIndex = nextDigitIndex < tokens.length ? nextDigitIndex : tokens.length;
+        nextIndex = Math.max(Math.min(nextIndex, maxIndex), minIndex);
+      }
+    }
+
     hoverIndexRef.current = nextIndex;
     setHoverIndex(nextIndex);
   }, []);
@@ -370,17 +489,24 @@ export default function GameScreen() {
 
     const label =
       runtime.source.type === 'equation' ? runtime.source.token.display : runtime.source.label;
+    const descriptor = describeTokenForAnnounce(runtime.source);
+    announce(
+      runtime.source.type === 'equation'
+        ? `Picked up ${descriptor}. Drag left or right to reorder, or leave the bar to remove it.`
+        : `Picked up ${descriptor}. Drag into the equation to place it.`
+    );
 
     setDragOverlay({
       token: runtime.source.type === 'equation' ? runtime.source.token.value : runtime.source.token,
       label,
       x: runtime.lastPoint.x,
       y: runtime.lastPoint.y,
+      origin: runtime.originPoint,
       source: runtime.source,
     });
 
     updateHoverTarget(runtime.lastPoint.x, runtime.lastPoint.y);
-  }, [updateHoverTarget]);
+  }, [announce, updateHoverTarget]);
 
   const beginPress = useCallback(
     (event: ReactPointerEvent<HTMLElement>, source: DragSource) => {
@@ -391,6 +517,21 @@ export default function GameScreen() {
         return;
       }
 
+      if (source.type === 'digit-pad' && !source.isNext) {
+        return;
+      }
+
+      const element = event.currentTarget as HTMLElement;
+      if ((element as HTMLButtonElement).disabled) {
+        return;
+      }
+
+      const rect = element.getBoundingClientRect();
+      const originPoint = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      };
+
       cancelDrag();
 
       const runtime: DragRuntime = {
@@ -398,6 +539,7 @@ export default function GameScreen() {
         source,
         startPoint: { x: event.clientX, y: event.clientY },
         lastPoint: { x: event.clientX, y: event.clientY },
+        originPoint,
         status: 'pressing',
         pressStart: performance.now(),
       };
@@ -477,29 +619,57 @@ export default function GameScreen() {
       const targetIndex = hoverIndexRef.current ?? tokensRef.current.length;
       const insideEquation = isOverEquationRef.current;
       const source = runtime.source;
+      const originPoint = runtime.originPoint;
+      const descriptor = describeTokenForAnnounce(source);
+
+      dragRuntimeRef.current = null;
+      hoverIndexRef.current = null;
+      setHoverIndex(null);
+      isOverEquationRef.current = false;
+      setIsOverEquation(false);
+
+      let shouldSnapBack = true;
+      let shouldAnimateRemoval = false;
+      let didMutate = false;
 
       if (!cancelled) {
         if (source.type === 'digit-pad' || source.type === 'operator-pad') {
           if (insideEquation) {
-            insertTokenAt(source.token, targetIndex, {
+            const inserted = insertTokenAt(source.token, targetIndex, {
               digitErrorMessage:
                 source.type === 'digit-pad' ? 'Use the date digits in order.' : undefined,
               equalsErrorMessage: 'Only one equals sign is allowed.',
             });
+            if (inserted) {
+              didMutate = true;
+              shouldSnapBack = false;
+              announce(`Placed ${descriptor} in the equation.`);
+            }
           }
         } else if (source.type === 'equation') {
           if (insideEquation) {
-            moveTokenWithinEquation(source.index, targetIndex, {
+            const moved = moveTokenWithinEquation(source.index, targetIndex, {
               digitErrorMessage:
                 source.token.type === 'digit' ? 'Numbers must stay in date order.' : undefined,
             });
+            if (moved) {
+              didMutate = true;
+              shouldSnapBack = false;
+              announce(`Moved ${descriptor} within the equation.`);
+            }
           } else {
-            removeTokenAt(source.index, {
+            const removed = removeTokenAt(source.index, {
               digitErrorMessage:
                 source.token.type === 'digit'
                   ? 'Remove later digits first to keep the order.'
                   : undefined,
             });
+            if (removed) {
+              didMutate = true;
+              shouldSnapBack = false;
+              shouldAnimateRemoval = true;
+              announce(`Removed ${descriptor} from the equation.`);
+            }
           }
         }
       }
@@ -508,6 +678,46 @@ export default function GameScreen() {
       setTimeout(() => {
         suppressClickRef.current = false;
       }, 0);
+
+      if (shouldAnimateRemoval && dragOverlayRef.current) {
+        setDragOverlay((current) =>
+          current
+            ? {
+                ...current,
+                isRemoving: true,
+              }
+            : current
+        );
+        window.setTimeout(() => {
+          cancelDrag();
+        }, REMOVE_ANIMATION_MS);
+        return;
+      }
+
+      if (shouldSnapBack && dragOverlayRef.current) {
+        announce(
+          cancelled ? `Cancelled drag of ${descriptor}.` : `Returned ${descriptor} to the source.`
+        );
+        setDragOverlay((current) =>
+          current
+            ? {
+                ...current,
+                x: originPoint.x,
+                y: originPoint.y,
+                isReturning: true,
+              }
+            : current
+        );
+        window.setTimeout(() => {
+          cancelDrag();
+        }, RETURN_ANIMATION_MS);
+        return;
+      }
+
+      if (didMutate) {
+        setDragOverlay(null);
+        dragOverlayRef.current = null;
+      }
 
       cancelDrag();
     };
@@ -526,6 +736,7 @@ export default function GameScreen() {
     };
   }, [
     activateDrag,
+    announce,
     cancelDrag,
     dragAndDropEnabled,
     insertTokenAt,
@@ -776,11 +987,15 @@ export default function GameScreen() {
     }
   }, [nextThemeMode]);
 
-  const isRemovingToken = dragOverlay?.source.type === 'equation' && !isOverEquation;
+  const isRemovingToken =
+    dragOverlay?.source.type === 'equation' && !isOverEquation && !dragOverlay?.isReturning;
   tokenRefs.current = [];
 
   return (
     <div className="game-screen" data-view={view}>
+      <div className="sr-only" role="status" aria-live="assertive" aria-atomic="true">
+        {liveMessage}
+      </div>
       <header className="game-header">
         <button
           type="button"
@@ -842,11 +1057,13 @@ export default function GameScreen() {
                     disabled={isUsed}
                     data-state={isUsed ? 'used' : isNext ? 'available' : 'waiting'}
                     onPointerDown={(event) =>
-                      dragAndDropEnabled
+                      dragAndDropEnabled && !isUsed && isNext
                         ? beginPress(event, {
                             type: 'digit-pad',
                             token: digit.toString(),
                             label: digit.toString(),
+                            index,
+                            isNext: true,
                           })
                         : undefined
                     }
@@ -882,6 +1099,16 @@ export default function GameScreen() {
                       const isDraggingToken =
                         dragOverlay?.source.type === 'equation' &&
                         dragOverlay.source.index === index;
+                      const shouldShiftRight =
+                        hoverIndex !== null &&
+                        hoverIndex <= index &&
+                        !(isDraggingToken && hoverIndex === index);
+                      const ariaLabel =
+                        token.type === 'digit'
+                          ? `Digit ${token.display}`
+                          : token.type === 'equals'
+                            ? 'Equals sign'
+                            : `Operator ${token.display}`;
                       return (
                         <Fragment key={`${token.value}-${index}`}>
                           {hoverIndex === index && (
@@ -893,6 +1120,8 @@ export default function GameScreen() {
                             tabIndex={-1}
                             data-type={token.type}
                             data-dragging={isDraggingToken ? 'true' : 'false'}
+                            data-shift={shouldShiftRight ? 'right' : undefined}
+                            aria-label={ariaLabel}
                             onPointerDown={(event) =>
                               beginPress(event, { type: 'equation', token, index })
                             }
@@ -1056,7 +1285,8 @@ export default function GameScreen() {
             <div className="sheet-section">
               <p className="sheet-section-title">Equation builder beta</p>
               <p className="sheet-section-hint">
-                Enable the experimental drag &amp; drop editor alongside tap and keyboard input.
+                Enable the experimental drag &amp; drop editor. Toggle off any time to return to
+                tap-and-keyboard controls.
               </p>
               <label className="sheet-toggle">
                 <input
@@ -1146,6 +1376,8 @@ export default function GameScreen() {
         <div
           className="floating-token"
           data-source={dragOverlay.source.type}
+          data-returning={dragOverlay.isReturning ? 'true' : undefined}
+          data-removing={dragOverlay.isRemoving ? 'true' : undefined}
           style={{ left: `${dragOverlay.x}px`, top: `${dragOverlay.y}px` }}
           aria-hidden="true"
         >

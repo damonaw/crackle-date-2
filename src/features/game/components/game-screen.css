@@ -369,7 +369,7 @@
 }
 
 .sheet {
-  align-items: flex-end;
+  align-items: flex-start;
   backdrop-filter: blur(10px);
   background: rgb(15 23 42 / 45%);
   display: flex;

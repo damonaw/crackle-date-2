@@ -104,6 +104,7 @@ export default function GameScreen() {
   const [toast, setToast] = useState<{ tone: ToastTone; message: string } | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [hasPromptedTutorial, setHasPromptedTutorial] = useState(false);
+  const [isHeaderCondensed, setHeaderCondensed] = useState(false);
 
   useEffect(() => {
     loadGameState();
@@ -121,6 +122,16 @@ export default function GameScreen() {
     const timer = setTimeout(() => setToast(null), 3200);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setHeaderCondensed(window.scrollY > 8);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const digitsArray = useMemo(() => getDigitsArray(getDateDigits(currentDate)), [currentDate]);
   const digitSections = useMemo(() => {
@@ -381,7 +392,7 @@ export default function GameScreen() {
 
   return (
     <div className="game-screen" data-view={view}>
-      <header className="game-header">
+      <header className="game-header" data-condensed={isHeaderCondensed}>
         <button
           type="button"
           className="icon-button"
@@ -393,6 +404,9 @@ export default function GameScreen() {
         <div className="game-header-title">
           <p className="game-header-tagline">Daily math challenge</p>
           <h1>Crackle Date</h1>
+          <p className="game-header-date" aria-label="Puzzle date">
+            {currentDate}
+          </p>
         </div>
         <button
           type="button"
@@ -406,33 +420,7 @@ export default function GameScreen() {
 
       <main className="game-main" aria-live="polite">
         {view === 'game' ? (
-          <section className="game-card" aria-label="Equation builder">
-            <div className="game-summary">
-              <div className="game-summary-date">
-                <span className="game-summary-text">Puzzle date</span>
-                <span className="game-date" aria-label="Puzzle date">
-                  {currentDate}
-                </span>
-              </div>
-              <div className="game-stats">
-                <div className="game-stat">
-                  <span className="game-stat-label">Score</span>
-                  <span className="game-stat-value">{score}</span>
-                </div>
-                <div className="game-stat">
-                  <span className="game-stat-label">Streak</span>
-                  <span className="game-stat-value">{streak}</span>
-                </div>
-                <div className="game-stat">
-                  <span className="game-stat-label">Hints</span>
-                  <span className="game-stat-value">{remainingHints}</span>
-                </div>
-                <button type="button" className="link-button" onClick={() => setView('stats')}>
-                  View stats →
-                </button>
-              </div>
-            </div>
-
+          <section className="game-content" aria-label="Equation builder">
             <div className="game-layout">
               <div className="game-layout-main">
                 <div className="digit-track" role="group" aria-label="Date digits" tabIndex={0}>
@@ -541,13 +529,6 @@ export default function GameScreen() {
                     disabled={remainingHints <= 0}
                   >
                     {remainingHints > 0 ? `Hint (${remainingHints})` : 'No hints left'}
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => setShowTutorial(true)}
-                  >
-                    Tutorial
                   </button>
                 </div>
               </div>

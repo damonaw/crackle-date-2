@@ -125,10 +125,10 @@ export default function GameScreen() {
   const digitsArray = useMemo(() => getDigitsArray(getDateDigits(currentDate)), [currentDate]);
   const digitSections = useMemo(() => {
     const monthDigitCount = Math.max(1, digitsArray.length - 6);
-    const sections = [
-      { start: 0, end: monthDigitCount, separator: '/' as const },
-      { start: monthDigitCount, end: monthDigitCount + 2, separator: '/' as const },
-      { start: monthDigitCount + 2, end: digitsArray.length, separator: null as const },
+    const sections: Array<{ start: number; end: number; separator: '/' | null }> = [
+      { start: 0, end: monthDigitCount, separator: '/' },
+      { start: monthDigitCount, end: monthDigitCount + 2, separator: '/' },
+      { start: monthDigitCount + 2, end: digitsArray.length, separator: null },
     ];
 
     return sections.filter((section) => section.end > section.start);

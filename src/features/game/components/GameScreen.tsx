@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import StatsPanel from '../../stats/components/StatsPanel';
 import { useThemeMode } from '../../theme/hooks/useThemeMode';
 import { useGameStore } from '../state/game-store';
@@ -123,6 +123,16 @@ export default function GameScreen() {
   }, [toast]);
 
   const digitsArray = useMemo(() => getDigitsArray(getDateDigits(currentDate)), [currentDate]);
+  const digitSections = useMemo(() => {
+    const monthDigitCount = Math.max(1, digitsArray.length - 6);
+    const sections = [
+      { start: 0, end: monthDigitCount, separator: '/' as const },
+      { start: monthDigitCount, end: monthDigitCount + 2, separator: '/' as const },
+      { start: monthDigitCount + 2, end: digitsArray.length, separator: null as const },
+    ];
+
+    return sections.filter((section) => section.end > section.start);
+  }, [digitsArray]);
   const usedDigits = useMemo(
     () => (equation.match(/\d/g) || []).map((digit) => parseInt(digit, 10)),
     [equation]
@@ -398,9 +408,12 @@ export default function GameScreen() {
         {view === 'game' ? (
           <section className="game-card" aria-label="Equation builder">
             <div className="game-summary">
-              <span className="game-date" aria-label="Puzzle date">
-                {currentDate}
-              </span>
+              <div className="game-summary-date">
+                <span className="game-summary-text">Puzzle date</span>
+                <span className="game-date" aria-label="Puzzle date">
+                  {currentDate}
+                </span>
+              </div>
               <div className="game-stats">
                 <div className="game-stat">
                   <span className="game-stat-label">Score</span>
@@ -420,80 +433,124 @@ export default function GameScreen() {
               </div>
             </div>
 
-            <div className="digit-pad" aria-label="Date digits">
-              {digitsArray.map((digit, index) => {
-                const isUsed = index < usedDigits.length;
-                const isNext = index === usedDigits.length;
-                return (
-                  <button
-                    key={`${digit}-${index}`}
-                    type="button"
-                    className="digit-button"
-                    disabled={isUsed}
-                    data-state={isUsed ? 'used' : isNext ? 'available' : 'waiting'}
-                    onClick={() => !isUsed && isNext && handleDigitPress(digit)}
-                  >
-                    {digit}
+            <div className="game-layout">
+              <div className="game-layout-main">
+                <div className="digit-track" role="group" aria-label="Date digits" tabIndex={0}>
+                  {digitSections.map((section, sectionIndex) => {
+                    const digits = digitsArray.slice(section.start, section.end);
+                    return (
+                      <Fragment key={`section-${sectionIndex}`}>
+                        {digits.map((digit, index) => {
+                          const globalIndex = section.start + index;
+                          const isUsed = globalIndex < usedDigits.length;
+                          const isNext = globalIndex === usedDigits.length;
+
+                          return (
+                            <span
+                              key={`${digit}-${globalIndex}`}
+                              className="digit-token-wrapper"
+                              data-state={isNext ? 'active' : isUsed ? 'used' : 'waiting'}
+                            >
+                              {isNext ? (
+                                <span className="digit-bracket" aria-hidden="true">
+                                  [
+                                </span>
+                              ) : null}
+                              {isNext ? (
+                                <button
+                                  type="button"
+                                  className="digit-token"
+                                  onClick={() => handleDigitPress(digit)}
+                                  aria-label={`Use digit ${digit}`}
+                                >
+                                  {digit}
+                                </button>
+                              ) : (
+                                <span
+                                  className="digit-token"
+                                  aria-hidden={false}
+                                  data-state={isUsed ? 'used' : 'waiting'}
+                                >
+                                  {digit}
+                                </span>
+                              )}
+                              {isNext ? (
+                                <span className="digit-bracket" aria-hidden="true">
+                                  ]
+                                </span>
+                              ) : null}
+                            </span>
+                          );
+                        })}
+                        {section.separator ? (
+                          <span className="digit-separator" aria-hidden="true">
+                            {section.separator}
+                          </span>
+                        ) : null}
+                      </Fragment>
+                    );
+                  })}
+                </div>
+
+                <div className="equation-display" role="textbox" aria-label="Current equation">
+                  {equation || <span className="equation-placeholder">Build your equation</span>}
+                </div>
+
+                <div className="equation-actions">
+                  <button type="button" className="secondary-button" onClick={clearEquation}>
+                    Clear
                   </button>
-                );
-              })}
-            </div>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={submitEquation}
+                    disabled={!isEquationReadyForSubmission()}
+                  >
+                    Submit
+                  </button>
+                </div>
+              </div>
 
-            <div className="equation-display" role="textbox" aria-label="Current equation">
-              {equation || <span className="equation-placeholder">Build your equation</span>}
-            </div>
-
-            <div className="operator-pad" aria-label="Math operators">
-              {OPERATOR_ROWS.map((row, rowIndex) => (
-                <div className="operator-row" key={`row-${rowIndex}`}>
-                  {row.map((item) => (
-                    <button
-                      key={item.token}
-                      type="button"
-                      className="operator-button"
-                      disabled={item.token === '=' && equation.includes('=')}
-                      onClick={() => addToken(item.token)}
-                    >
-                      {item.label}
-                    </button>
+              <div className="game-layout-side">
+                <div className="operator-pad" aria-label="Math operators">
+                  {OPERATOR_ROWS.map((row, rowIndex) => (
+                    <div className="operator-row" key={`row-${rowIndex}`}>
+                      {row.map((item) => (
+                        <button
+                          key={item.token}
+                          type="button"
+                          className="operator-button"
+                          disabled={item.token === '=' && equation.includes('=')}
+                          onClick={() => addToken(item.token)}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
                   ))}
                 </div>
-              ))}
-            </div>
 
-            <div className="equation-actions">
-              <button type="button" className="secondary-button" onClick={clearEquation}>
-                Clear
-              </button>
-              <button
-                type="button"
-                className="primary-button"
-                onClick={submitEquation}
-                disabled={!isEquationReadyForSubmission()}
-              >
-                Submit
-              </button>
-            </div>
-
-            <div className="quick-actions">
-              <button type="button" className="secondary-button" onClick={removeLastChar}>
-                Backspace
-              </button>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={handleHint}
-                disabled={remainingHints <= 0}
-              >
-                {remainingHints > 0 ? `Hint (${remainingHints})` : 'No hints left'}
-              </button>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setShowTutorial(true)}
-              >
-                Tutorial
-              </button>
+                <div className="quick-actions">
+                  <button type="button" className="secondary-button" onClick={removeLastChar}>
+                    Backspace
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={handleHint}
+                    disabled={remainingHints <= 0}
+                  >
+                    {remainingHints > 0 ? `Hint (${remainingHints})` : 'No hints left'}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => setShowTutorial(true)}
+                  >
+                    Tutorial
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
         ) : (

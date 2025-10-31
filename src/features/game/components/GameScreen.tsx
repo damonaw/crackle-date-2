@@ -100,7 +100,9 @@ const calculateSideValues = (equation: string): { left: string; right: string } 
     if (!equation.includes('=')) {
       return { left: '', right: '' };
     }
-    const [leftSide, rightSide] = equation.split('=');
+    const equalsIndex = equation.indexOf('=');
+    const leftSide = equation.substring(0, equalsIndex);
+    const rightSide = equation.substring(equalsIndex + 1);
 
     let leftValue = '';
     let rightValue = '';

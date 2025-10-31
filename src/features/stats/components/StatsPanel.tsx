@@ -62,6 +62,15 @@ interface StatsPanelProps {
   onShare?: () => void;
 }
 
+// Format time in seconds to human-readable format
+const formatTime = (seconds?: number): string | null => {
+  if (seconds === undefined) return null;
+  if (seconds < 60) return `${seconds}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}m ${secs}s`;
+};
+
 export default function StatsPanel({
   onBack,
   score,
@@ -150,13 +159,6 @@ export default function StatsPanel({
           <ul>
             {solutionsReversed.map((solution, index) => {
               const key = solution.timestamp instanceof Date ? solution.timestamp.getTime() : index;
-              const formatTime = (seconds?: number) => {
-                if (seconds === undefined) return null;
-                if (seconds < 60) return `${seconds}s`;
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                return `${mins}m ${secs}s`;
-              };
 
               return (
                 <li key={key} className="stats-panel-solution-row">

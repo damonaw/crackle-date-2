@@ -42,14 +42,14 @@ For **September 18, 2025** (9-18-2025):
 | Power | `^` | Raise to a power (e.g., 2^3 = 8) | 4 |
 | Square Root | `√` | Square root (e.g., √9 = 3) | 3 |
 | Factorial | `!` | Factorial (e.g., 5! = 120) | 3 |
-| Absolute Value | `\|x\|` | Absolute value (e.g., \|-5\| = 5) | 2 |
+| Absolute Value | `|x|` | Absolute value (e.g., |-5| = 5) | 2 |
 | Modulo | `%` | Remainder after division | 3 |
 | Parentheses | `()` | Group operations for precedence | 1 |
 
 **Keyboard Shortcuts:**
 - `x` or `X` → Multiplication (×)
 - `s` or `S` → Square root (√)
-- `a` or `A` → Absolute value (\|x\|)
+- `a` or `A` → Absolute value (|x|)
 - Numbers `0-9` → Add next required digit
 - `+`, `-`, `/`, `^`, `%`, `!`, `(`, `)`, `=` → Direct input
 - `Enter` → Submit equation

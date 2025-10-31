@@ -98,6 +98,15 @@ const DarkModeIcon = () => (
 const calculateSideValues = (equation: string): { left: string; right: string } => {
   try {
     if (!equation.includes('=')) {
+      // If there's no equal sign, treat everything as the left side
+      if (equation.trim()) {
+        try {
+          const leftResult = evaluate(equation);
+          return { left: typeof leftResult === 'number' ? leftResult.toString() : '', right: '' };
+        } catch {
+          return { left: '', right: '' };
+        }
+      }
       return { left: '', right: '' };
     }
     const equalsIndex = equation.indexOf('=');
@@ -551,10 +560,12 @@ export default function GameScreen() {
                       <span className="easy-mode-label">Left:</span>
                       <span className="easy-mode-value">{easyModeValues.left || '—'}</span>
                     </div>
-                    <div className="easy-mode-side">
-                      <span className="easy-mode-label">Right:</span>
-                      <span className="easy-mode-value">{easyModeValues.right || '—'}</span>
-                    </div>
+                    {equation.includes('=') && (
+                      <div className="easy-mode-side">
+                        <span className="easy-mode-label">Right:</span>
+                        <span className="easy-mode-value">{easyModeValues.right || '—'}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 

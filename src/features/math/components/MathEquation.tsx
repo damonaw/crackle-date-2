@@ -57,8 +57,22 @@ const convertToLatex = (equation: string): string => {
   try {
     const parts = equation.split('=');
     if (parts.length === 2) {
-      const leftLatex = parse(parts[0].trim()).toTex();
-      const rightLatex = parse(parts[1].trim()).toTex();
+      const leftSide = parts[0].trim();
+      const rightSide = parts[1].trim();
+
+      // If left side is empty, just render what we have
+      if (!leftSide) {
+        return '=';
+      }
+
+      const leftLatex = parse(leftSide).toTex();
+
+      // If right side is empty, just show left side with equals sign
+      if (!rightSide) {
+        return `${leftLatex} =`;
+      }
+
+      const rightLatex = parse(rightSide).toTex();
       return `${leftLatex} = ${rightLatex}`;
     }
 

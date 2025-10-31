@@ -18,27 +18,42 @@ export default function DatePicker({
   // Convert game date format (M-DD-YYYY) to ISO format (YYYY-MM-DD)
   const gameToISO = (gameDate: string): string => {
     const date = parseGameDate(gameDate);
+    // Validate date is valid
+    if (Number.isNaN(date.getTime())) {
+      // Return current date as fallback
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
 
-  // Convert ISO format (YYYY-MM-DD) to game date format (M-DD-YYYY)
-  const isoToGame = (isoDate: string): string => {
-    const [year, month, day] = isoDate.split('-');
-    return formatDateForGame(
-      new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10))
-    );
-  };
-
   const handleDateChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const isoDate = event.target.value;
-      if (isoDate) {
-        const gameDate = isoToGame(isoDate);
-        onDateSelect(gameDate);
+      if (!isoDate) {
+        return;
       }
+
+      // Convert ISO format (YYYY-MM-DD) to game date format (M-DD-YYYY)
+      const parts = isoDate.split('-');
+      // Validate ISO date format has exactly 3 parts
+      if (parts.length !== 3) {
+        return;
+      }
+      const [year, month, day] = parts;
+      const yearNum = parseInt(year, 10);
+      const monthNum = parseInt(month, 10);
+      const dayNum = parseInt(day, 10);
+      // Validate all parts are valid numbers
+      if (Number.isNaN(yearNum) || Number.isNaN(monthNum) || Number.isNaN(dayNum)) {
+        return;
+      }
+
+      const gameDate = formatDateForGame(new Date(yearNum, monthNum - 1, dayNum));
+      onDateSelect(gameDate);
     },
     [onDateSelect]
   );

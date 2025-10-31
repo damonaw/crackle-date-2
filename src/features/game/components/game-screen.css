@@ -130,6 +130,7 @@
   font-variant-numeric: tabular-nums;
   gap: clamp(0.1rem, 0.08rem + 0.35vw, 0.35rem);
   justify-content: flex-start;
+  min-height: 4rem;
   overflow-x: auto;
   padding: clamp(0.55rem, 0.45rem + 0.7vw, 1rem) clamp(0.7rem, 0.6rem + 1vw, 1.4rem);
   scroll-behavior: smooth;
@@ -156,7 +157,7 @@
   align-items: center;
   color: var(--color-text-secondary);
   display: inline-flex;
-  font-size: clamp(0.95rem, 0.85rem + 0.8vw, 1.4rem);
+  font-size: clamp(1.25rem, 1.1rem + 1vw, 1.8rem);
   font-weight: 600;
   gap: 0.03rem;
   letter-spacing: 0.06em;
@@ -199,7 +200,7 @@
 
 .digit-token-wrapper[data-state='active'] {
   color: var(--color-accent);
-  font-size: clamp(1.1rem, 1rem + 1vw, 1.6rem);
+  font-size: clamp(1.4rem, 1.25rem + 1.2vw, 2rem);
   font-weight: 700;
   gap: 0.15rem;
   transform: translateY(-1px);

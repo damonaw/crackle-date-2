@@ -1,22 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { parse } from 'mathjs';
-
-declare global {
-  interface Window {
-    katex?: {
-      render: (
-        tex: string,
-        element: HTMLElement,
-        options?: {
-          displayMode?: boolean;
-          throwOnError?: boolean;
-          errorColor?: string;
-          strict?: boolean;
-        }
-      ) => void;
-    };
-  }
-}
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
 
 interface MathEquationProps {
   equation: string;
@@ -50,22 +35,19 @@ export default function MathEquation({
 
     const errorColor = getCssVariable('--color-danger', 'rgb(239, 68, 68)');
 
-    if (typeof window !== 'undefined' && window.katex) {
-      try {
-        const latexEquation = convertToLatex(equation);
-        window.katex.render(latexEquation, element, {
-          displayMode,
-          throwOnError: false,
-          errorColor,
-          strict: false,
-        });
-        return;
-      } catch (error) {
-        console.error('KaTeX rendering error:', error);
-      }
+    try {
+      const latexEquation = convertToLatex(equation);
+      katex.render(latexEquation, element, {
+        displayMode,
+        throwOnError: false,
+        errorColor,
+        strict: false,
+      });
+      return;
+    } catch (error) {
+      console.error('KaTeX rendering error:', error);
+      element.innerHTML = formatMathFallback(equation);
     }
-
-    element.innerHTML = formatMathFallback(equation);
   }, [equation, displayMode]);
 
   return <span ref={mathRef} className={className} />;
@@ -74,14 +56,15 @@ export default function MathEquation({
 const convertToLatex = (equation: string): string => {
   try {
     const parts = equation.split('=');
-    if (parts.length !== 2) {
-      return formatMathFallback(equation);
+    if (parts.length === 2) {
+      const leftLatex = parse(parts[0].trim()).toTex();
+      const rightLatex = parse(parts[1].trim()).toTex();
+      return `${leftLatex} = ${rightLatex}`;
     }
 
-    const leftLatex = parse(parts[0].trim()).toTex();
-    const rightLatex = parse(parts[1].trim()).toTex();
-
-    return `${leftLatex} = ${rightLatex}`;
+    // Render partial expressions (without equals sign) using KaTeX
+    const latex = parse(equation.trim()).toTex();
+    return latex;
   } catch (error) {
     console.warn('LaTeX conversion failed, using fallback formatting:', error);
     return formatMathFallback(equation);

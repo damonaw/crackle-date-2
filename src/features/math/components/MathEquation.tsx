@@ -60,9 +60,9 @@ const convertToLatex = (equation: string): string => {
       const leftSide = parts[0].trim();
       const rightSide = parts[1].trim();
 
-      // If left side is empty, just render what we have
+      // If left side is empty, fall back to standard formatting
       if (!leftSide) {
-        return '=';
+        return formatMathFallback(equation);
       }
 
       const leftLatex = parse(leftSide).toTex();

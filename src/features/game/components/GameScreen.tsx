@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import MathEquation from '../../math/components/MathEquation';
 import StatsPanel from '../../stats/components/StatsPanel';
 import { useThemeMode } from '../../theme/hooks/useThemeMode';
 import { useGameStore } from '../state/game-store';
@@ -480,8 +481,17 @@ export default function GameScreen() {
                   })}
                 </div>
 
-                <div className="equation-display" role="textbox" aria-label="Current equation">
-                  {equation || <span className="equation-placeholder">Build your equation</span>}
+                <div
+                  className="equation-display"
+                  role="textbox"
+                  aria-label="Current equation"
+                  aria-live="polite"
+                >
+                  {equation ? (
+                    <MathEquation equation={equation} className="equation-render" />
+                  ) : (
+                    <span className="equation-placeholder">Build your equation</span>
+                  )}
                 </div>
 
                 <div className="equation-actions">

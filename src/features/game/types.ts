@@ -5,9 +5,11 @@ export interface GameState {
   score: number;
   streak: number;
   solutions: Solution[];
-  hintsUsed: number;
   availableDates: string[];
   achievements: AchievementStatus[];
+  wrongAttempts: number;
+  startTime: number | null;
+  easyMode: boolean;
 }
 
 export interface Solution {
@@ -15,6 +17,8 @@ export interface Solution {
   score: number;
   timestamp: Date;
   complexity: ComplexityLevel;
+  timeToSolve?: number;
+  wrongAttempts?: number;
 }
 
 export type ComplexityLevel = 'trivial' | 'simple' | 'moderate' | 'complex' | 'advanced';

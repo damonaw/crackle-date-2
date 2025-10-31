@@ -1,10 +1,11 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { evaluate } from 'mathjs';
 import MathEquation from '../../math/components/MathEquation';
 import StatsPanel from '../../stats/components/StatsPanel';
 import { useThemeMode } from '../../theme/hooks/useThemeMode';
 import { useGameStore } from '../state/game-store';
 import { getDateDigits, getDigitsArray, getTodaysGameDate } from '../lib/dateUtils';
-import { validateEquationInput, getInputHint } from '../lib/inputValidator';
+import { validateEquationInput } from '../lib/inputValidator';
 import { validateEquation } from '../lib/mathValidator';
 import { calculateScore, getScoreDescription } from '../lib/scoring';
 import DatePicker from './DatePicker';
@@ -18,28 +19,27 @@ type OperatorToken = {
   label: string;
 };
 
-const OPERATOR_ROWS: OperatorToken[][] = [
+// Reorganized operators: 3 columns of 4 rows
+const OPERATOR_COLUMNS: OperatorToken[][] = [
   [
     { token: '+', label: '+' },
-    { token: '-', label: '−' },
-    { token: '*', label: '×' },
-    { token: '/', label: '÷' },
-  ],
-  [
     { token: '^', label: '^' },
-    { token: '%', label: '%' },
-    { token: 'sqrt(', label: '√' },
-    { token: 'abs(', label: '|x|' },
-  ],
-  [
     { token: '(', label: '(' },
-    { token: ')', label: ')' },
-    { token: '!', label: '!' },
     { token: '=', label: '=' },
   ],
+  [
+    { token: '-', label: '−' },
+    { token: '%', label: '%' },
+    { token: ')', label: ')' },
+    { token: 'sqrt(', label: '√' },
+  ],
+  [
+    { token: '*', label: '×' },
+    { token: '/', label: '÷' },
+    { token: '!', label: '!' },
+    { token: 'abs(', label: '|x|' },
+  ],
 ];
-
-const MAX_HINTS_PER_DAY = 3;
 
 const SHARE_OPERATOR_TOKENS: OperatorToken[] = [
   { token: '+', label: '+' },
@@ -81,6 +81,54 @@ const mapKeyToToken = (key: string): string | null => {
   return null;
 };
 
+// Material UI style icons as SVG components
+const LightModeIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z" />
+  </svg>
+);
+
+const DarkModeIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z" />
+  </svg>
+);
+
+// Calculate equation side values for easy mode
+const calculateSideValues = (equation: string): { left: string; right: string } => {
+  try {
+    if (!equation.includes('=')) {
+      return { left: '', right: '' };
+    }
+    const [leftSide, rightSide] = equation.split('=');
+
+    let leftValue = '';
+    let rightValue = '';
+
+    if (leftSide.trim()) {
+      try {
+        const leftResult = evaluate(leftSide);
+        leftValue = typeof leftResult === 'number' ? leftResult.toString() : '';
+      } catch {
+        leftValue = '';
+      }
+    }
+
+    if (rightSide.trim()) {
+      try {
+        const rightResult = evaluate(rightSide);
+        rightValue = typeof rightResult === 'number' ? rightResult.toString() : '';
+      } catch {
+        rightValue = '';
+      }
+    }
+
+    return { left: leftValue, right: rightValue };
+  } catch {
+    return { left: '', right: '' };
+  }
+};
+
 export default function GameScreen() {
   const currentDate = useGameStore((state) => state.currentDate);
   const equation = useGameStore((state) => state.equation);
@@ -92,11 +140,12 @@ export default function GameScreen() {
   const streak = useGameStore((state) => state.streak);
   const solutions = useGameStore((state) => state.solutions);
   const selectDate = useGameStore((state) => state.selectDate);
-  const hintsUsed = useGameStore((state) => state.hintsUsed);
-  const incrementHintsUsed = useGameStore((state) => state.incrementHintsUsed);
   const achievements = useGameStore((state) => state.achievements);
   const tutorialSeen = useGameStore((state) => state.tutorialSeen);
   const markTutorialComplete = useGameStore((state) => state.markTutorialComplete);
+  const incrementWrongAttempts = useGameStore((state) => state.incrementWrongAttempts);
+  const easyMode = useGameStore((state) => state.easyMode);
+  const setEasyMode = useGameStore((state) => state.setEasyMode);
 
   const { themeMode, resolvedMode, cycleThemeMode, nextThemeMode } = useThemeMode();
 
@@ -150,21 +199,14 @@ export default function GameScreen() {
     [equation]
   );
 
+  const easyModeValues = useMemo(() => {
+    if (!easyMode) return null;
+    return calculateSideValues(equation);
+  }, [easyMode, equation]);
+
   const showToast = useCallback((tone: ToastTone, message: string) => {
     setToast({ tone, message });
   }, []);
-
-  const remainingHints = Math.max(0, MAX_HINTS_PER_DAY - hintsUsed);
-
-  const handleHint = useCallback(() => {
-    if (hintsUsed >= MAX_HINTS_PER_DAY) {
-      showToast('info', 'You have used all available hints for today.');
-      return;
-    }
-    const hint = getInputHint(equation, currentDate);
-    incrementHintsUsed();
-    showToast('info', `Hint: ${hint}`);
-  }, [currentDate, equation, hintsUsed, incrementHintsUsed, showToast]);
 
   const handleShareSolutions = useCallback(async () => {
     if (solutions.length === 0) {
@@ -254,8 +296,6 @@ export default function GameScreen() {
       const validation = validateEquationInput(equation, token, currentDate);
       if (validation.isValid) {
         setEquation(equation + token);
-      } else if (/^\d$/.test(token)) {
-        showToast('info', getInputHint(equation, currentDate));
       } else if (validation.error) {
         showToast('error', validation.error);
       }
@@ -320,9 +360,18 @@ export default function GameScreen() {
       showToast('success', `🎉 ${description}`);
       clearEquation();
     } else {
+      incrementWrongAttempts();
       showToast('error', result.error || 'Invalid equation.');
     }
-  }, [addSolution, clearEquation, currentDate, equation, setValid, showToast]);
+  }, [
+    addSolution,
+    clearEquation,
+    currentDate,
+    equation,
+    incrementWrongAttempts,
+    setValid,
+    showToast,
+  ]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -415,7 +464,7 @@ export default function GameScreen() {
           onClick={cycleThemeMode}
           aria-label={`Current theme ${themeMode}. ${nextThemeLabel}`}
         >
-          {resolvedMode === 'dark' ? '🌙' : '☀️'}
+          {resolvedMode === 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
         </button>
       </header>
 
@@ -494,9 +543,25 @@ export default function GameScreen() {
                   )}
                 </div>
 
+                {easyMode && easyModeValues && (
+                  <div className="easy-mode-values" aria-label="Equation side values">
+                    <div className="easy-mode-side">
+                      <span className="easy-mode-label">Left:</span>
+                      <span className="easy-mode-value">{easyModeValues.left || '—'}</span>
+                    </div>
+                    <div className="easy-mode-side">
+                      <span className="easy-mode-label">Right:</span>
+                      <span className="easy-mode-value">{easyModeValues.right || '—'}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="equation-actions">
                   <button type="button" className="secondary-button" onClick={clearEquation}>
                     Clear
+                  </button>
+                  <button type="button" className="secondary-button" onClick={removeLastChar}>
+                    Backspace
                   </button>
                   <button
                     type="button"
@@ -511,9 +576,9 @@ export default function GameScreen() {
 
               <div className="game-layout-side">
                 <div className="operator-pad" aria-label="Math operators">
-                  {OPERATOR_ROWS.map((row, rowIndex) => (
-                    <div className="operator-row" key={`row-${rowIndex}`}>
-                      {row.map((item) => (
+                  {OPERATOR_COLUMNS.map((column, colIndex) => (
+                    <div className="operator-column" key={`col-${colIndex}`}>
+                      {column.map((item) => (
                         <button
                           key={item.token}
                           type="button"
@@ -526,20 +591,6 @@ export default function GameScreen() {
                       ))}
                     </div>
                   ))}
-                </div>
-
-                <div className="quick-actions">
-                  <button type="button" className="secondary-button" onClick={removeLastChar}>
-                    Backspace
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={handleHint}
-                    disabled={remainingHints <= 0}
-                  >
-                    {remainingHints > 0 ? `Hint (${remainingHints})` : 'No hints left'}
-                  </button>
                 </div>
               </div>
             </div>
@@ -576,16 +627,6 @@ export default function GameScreen() {
                 type="button"
                 className="sheet-link"
                 onClick={() => {
-                  setView('game');
-                  setMenuOpen(false);
-                }}
-              >
-                Play
-              </button>
-              <button
-                type="button"
-                className="sheet-link"
-                onClick={() => {
                   setView('stats');
                   setMenuOpen(false);
                 }}
@@ -607,6 +648,16 @@ export default function GameScreen() {
               <p className="sheet-section-title">Theme</p>
               <button type="button" className="secondary-button" onClick={cycleThemeMode}>
                 {nextThemeLabel}
+              </button>
+            </div>
+            <div className="sheet-section">
+              <p className="sheet-section-title">Easy Mode</p>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setEasyMode(!easyMode)}
+              >
+                {easyMode ? 'Disable easy mode' : 'Enable easy mode'}
               </button>
             </div>
             <div className="sheet-section">

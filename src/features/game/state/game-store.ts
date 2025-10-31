@@ -28,13 +28,14 @@ interface GameStore extends GameState {
   setThemeMode: (mode: ThemeMode) => void;
   cycleThemeMode: () => void;
   selectDate: (date: string) => void;
-  incrementHintsUsed: () => void;
   tutorialSeen: boolean;
   markTutorialComplete: () => void;
+  incrementWrongAttempts: () => void;
+  startTimer: () => void;
+  setEasyMode: (enabled: boolean) => void;
 }
 
 const RECENT_DATES_TO_SHOW = 7;
-const MAX_HINTS_PER_DAY = 3;
 
 const initialDate = getTodaysGameDate();
 
@@ -45,9 +46,11 @@ const initialState: GameState = {
   score: 0,
   streak: 0,
   solutions: [],
-  hintsUsed: 0,
   availableDates: [initialDate],
   achievements: [],
+  wrongAttempts: 0,
+  startTime: null,
+  easyMode: false,
 };
 
 const sortDatesDesc = (dates: string[]): string[] =>
@@ -72,6 +75,8 @@ const hydrateDayState = (dayState?: StoredDayState) => {
         score: stored.score,
         timestamp: new Date(stored.timestamp),
         complexity: stored.complexity ?? 'simple',
+        timeToSolve: stored.timeToSolve,
+        wrongAttempts: stored.wrongAttempts,
       }))
     : [];
 
@@ -81,7 +86,8 @@ const hydrateDayState = (dayState?: StoredDayState) => {
     equation: dayState?.equation ?? '',
     solutions,
     isValid: dayState?.isValid ?? false,
-    hintsUsed: dayState?.hintsUsed ?? 0,
+    wrongAttempts: dayState?.wrongAttempts ?? 0,
+    startTime: dayState?.startTime ?? null,
     score,
   };
 };
@@ -99,10 +105,16 @@ export const useGameStore = create<GameStore>((set, get) => {
     gameStats: stats,
     themeMode: prefs.themeMode ?? 'system',
     tutorialSeen: prefs.tutorialSeen ?? false,
+    easyMode: prefs.easyMode ?? false,
     streak: stats.currentStreak,
 
     setEquation: (equation: string) => {
       set({ equation });
+      // Start timer on first equation input
+      const state = get();
+      if (!state.startTime && equation.length > 0) {
+        set({ startTime: Date.now() });
+      }
       setTimeout(() => get().saveGameState(), 100);
     },
 
@@ -111,18 +123,26 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     addSolution: (equation: string, score: number, complexity: ComplexityLevel) => {
-      const wasEmpty = get().solutions.length === 0;
+      const state = get();
+      const wasEmpty = state.solutions.length === 0;
+      const timeToSolve = state.startTime
+        ? Math.floor((Date.now() - state.startTime) / 1000)
+        : undefined;
       const newSolution = {
         equation,
         score,
         timestamp: new Date(),
         complexity,
+        timeToSolve,
+        wrongAttempts: state.wrongAttempts,
       };
 
-      set((state) => ({
-        solutions: [...state.solutions, newSolution],
-        score: state.score + score,
-        availableDates: sortDatesDesc([...state.availableDates, state.currentDate]),
+      set((currentState) => ({
+        solutions: [...currentState.solutions, newSolution],
+        score: currentState.score + score,
+        availableDates: sortDatesDesc([...currentState.availableDates, currentState.currentDate]),
+        wrongAttempts: 0,
+        startTime: null,
       }));
 
       get().updateStats(true, score, wasEmpty);
@@ -151,7 +171,8 @@ export const useGameStore = create<GameStore>((set, get) => {
         isValid: false,
         score: 0,
         solutions: [],
-        hintsUsed: 0,
+        wrongAttempts: 0,
+        startTime: null,
         availableDates: sortDatesDesc([...state.availableDates, todaysDate]),
         streak: state.gameStats.currentStreak,
       }));
@@ -174,13 +195,15 @@ export const useGameStore = create<GameStore>((set, get) => {
         solutions: hydrated.solutions,
         isValid: hydrated.isValid,
         score: hydrated.score,
-        hintsUsed: hydrated.hintsUsed,
+        wrongAttempts: hydrated.wrongAttempts,
+        startTime: hydrated.startTime,
         availableDates: buildAvailableDates(history, currentDate),
         gameStats: statsSnapshot,
         streak: statsSnapshot.currentStreak,
         achievements: evaluateAchievements(statsSnapshot),
         themeMode: prefsSnapshot.themeMode ?? 'system',
         tutorialSeen: prefsSnapshot.tutorialSeen ?? false,
+        easyMode: prefsSnapshot.easyMode ?? false,
       });
 
       get().saveGameState();
@@ -198,10 +221,13 @@ export const useGameStore = create<GameStore>((set, get) => {
           score: sol.score,
           timestamp: sol.timestamp.toISOString(),
           complexity: sol.complexity,
+          timeToSolve: sol.timeToSolve,
+          wrongAttempts: sol.wrongAttempts,
         })),
         isValid: state.isValid,
         completed: state.solutions.length > 0,
-        hintsUsed: state.hintsUsed,
+        wrongAttempts: state.wrongAttempts,
+        startTime: state.startTime,
       };
 
       saveGameData({
@@ -234,15 +260,11 @@ export const useGameStore = create<GameStore>((set, get) => {
         solutions: hydrated.solutions,
         isValid: hydrated.isValid,
         score: hydrated.score,
-        hintsUsed: hydrated.hintsUsed,
+        wrongAttempts: hydrated.wrongAttempts,
+        startTime: hydrated.startTime,
         availableDates: buildAvailableDates(history, date),
       });
 
-      get().saveGameState();
-    },
-
-    incrementHintsUsed: () => {
-      set((state) => ({ hintsUsed: Math.min(state.hintsUsed + 1, MAX_HINTS_PER_DAY) }));
       get().saveGameState();
     },
 
@@ -253,6 +275,25 @@ export const useGameStore = create<GameStore>((set, get) => {
       set({ tutorialSeen: true });
       const prefsSnapshot = getUserPreferences();
       saveUserPreferences({ ...prefsSnapshot, tutorialSeen: true });
+    },
+
+    incrementWrongAttempts: () => {
+      set((state) => ({ wrongAttempts: state.wrongAttempts + 1 }));
+      get().saveGameState();
+    },
+
+    startTimer: () => {
+      const state = get();
+      if (!state.startTime) {
+        set({ startTime: Date.now() });
+        get().saveGameState();
+      }
+    },
+
+    setEasyMode: (enabled: boolean) => {
+      set({ easyMode: enabled });
+      const prefsSnapshot = getUserPreferences();
+      saveUserPreferences({ ...prefsSnapshot, easyMode: enabled });
     },
   };
 });

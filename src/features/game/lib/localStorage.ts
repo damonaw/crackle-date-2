@@ -26,6 +26,8 @@ export interface StoredSolutionData {
   score: number;
   timestamp: string;
   complexity?: ComplexityLevel;
+  timeToSolve?: number;
+  wrongAttempts?: number;
 }
 
 export interface StoredDayState {
@@ -33,7 +35,8 @@ export interface StoredDayState {
   solutions: StoredSolutionData[];
   isValid: boolean;
   completed: boolean;
-  hintsUsed: number;
+  wrongAttempts?: number;
+  startTime?: number | null;
 }
 
 export interface GameData {
@@ -56,6 +59,7 @@ export interface UserPreferences {
   soundEnabled: boolean;
   themeMode?: ThemeMode; // new preferred field
   tutorialSeen?: boolean;
+  easyMode?: boolean;
 }
 
 const STORAGE_KEYS = {
@@ -70,6 +74,8 @@ const normalizeSolutions = (solutions: StoredSolutionData[] = []): StoredSolutio
     score: solution.score,
     timestamp: solution.timestamp,
     complexity: solution.complexity,
+    timeToSolve: solution.timeToSolve,
+    wrongAttempts: solution.wrongAttempts,
   }));
 
 const normalizeDayState = (state?: Partial<StoredDayState>): StoredDayState => {
@@ -80,7 +86,8 @@ const normalizeDayState = (state?: Partial<StoredDayState>): StoredDayState => {
     solutions: normalizedSolutions,
     isValid: state?.isValid ?? false,
     completed: state?.completed ?? normalizedSolutions.length > 0,
-    hintsUsed: typeof state?.hintsUsed === 'number' ? state.hintsUsed : 0,
+    wrongAttempts: typeof state?.wrongAttempts === 'number' ? state.wrongAttempts : 0,
+    startTime: state?.startTime ?? null,
   };
 };
 
@@ -97,7 +104,8 @@ const convertLegacyGameData = (legacy: LegacyGameData): GameData => {
         solutions: legacy.solutions,
         isValid: legacy.isValid,
         completed: legacy.completedToday,
-        hintsUsed: 0,
+        wrongAttempts: 0,
+        startTime: null,
       }),
     },
   };
@@ -396,6 +404,7 @@ export const getUserPreferences = (): UserPreferences => {
     soundEnabled: true,
     themeMode: 'system',
     tutorialSeen: false,
+    easyMode: false,
   };
 
   const prefs = loadFromStorage(STORAGE_KEYS.USER_PREFS, defaultPrefs);
@@ -405,6 +414,9 @@ export const getUserPreferences = (): UserPreferences => {
   }
   if (typeof prefs.tutorialSeen !== 'boolean') {
     prefs.tutorialSeen = false;
+  }
+  if (typeof prefs.easyMode !== 'boolean') {
+    prefs.easyMode = false;
   }
   return prefs;
 };

@@ -118,13 +118,9 @@
 
 .digit-track {
   align-items: center;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--color-surface-muted) 92%, transparent),
-    color-mix(in srgb, var(--color-surface-muted) 70%, transparent)
-  );
+  background: var(--color-surface-muted);
   border: 1px solid var(--color-border);
-  border-radius: 1.25rem;
+  border-radius: 0.75rem;
   display: flex;
   flex-wrap: nowrap;
   font-variant-numeric: tabular-nums;
@@ -269,9 +265,37 @@
   min-width: 0;
 }
 
-.equation-actions {
+.easy-mode-values {
+  align-items: center;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
+  justify-content: space-around;
+  padding: 0.75rem 1rem;
+}
+
+.easy-mode-side {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.easy-mode-label {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.easy-mode-value {
+  color: var(--color-accent);
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
 }
 
 .primary-button,
@@ -308,21 +332,31 @@
   color: var(--color-text-primary);
 }
 
+.equation-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.equation-actions .secondary-button,
+.equation-actions .primary-button {
+  flex: 1;
+}
+
 .primary-button:hover:not(:disabled),
 .secondary-button:hover {
   transform: translateY(-1px);
 }
 
 .operator-pad {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(56px, 1fr));
+}
+
+.operator-column {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-.operator-row {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(4, minmax(56px, 1fr));
 }
 
 .operator-button {
@@ -347,18 +381,6 @@
 .operator-button:hover:not(:disabled) {
   box-shadow: 0 6px 16px var(--color-shadow-soft);
   transform: translateY(-1px);
-}
-
-.quick-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  width: 100%;
-}
-
-.quick-actions .secondary-button {
-  flex: 1;
-  min-width: 0;
 }
 
 @media (width >= 960px) {

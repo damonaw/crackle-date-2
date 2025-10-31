@@ -3,10 +3,11 @@ import MathEquation from '../../math/components/MathEquation';
 import StatsPanel from '../../stats/components/StatsPanel';
 import { useThemeMode } from '../../theme/hooks/useThemeMode';
 import { useGameStore } from '../state/game-store';
-import { getDateDigits, getDigitsArray } from '../lib/dateUtils';
+import { getDateDigits, getDigitsArray, getTodaysGameDate } from '../lib/dateUtils';
 import { validateEquationInput, getInputHint } from '../lib/inputValidator';
 import { validateEquation } from '../lib/mathValidator';
 import { calculateScore, getScoreDescription } from '../lib/scoring';
+import DatePicker from './DatePicker';
 import './game-screen.css';
 
 type ViewMode = 'game' | 'stats';
@@ -90,7 +91,6 @@ export default function GameScreen() {
   const score = useGameStore((state) => state.score);
   const streak = useGameStore((state) => state.streak);
   const solutions = useGameStore((state) => state.solutions);
-  const availableDates = useGameStore((state) => state.availableDates);
   const selectDate = useGameStore((state) => state.selectDate);
   const hintsUsed = useGameStore((state) => state.hintsUsed);
   const incrementHintsUsed = useGameStore((state) => state.incrementHintsUsed);
@@ -611,19 +611,11 @@ export default function GameScreen() {
             </div>
             <div className="sheet-section">
               <p className="sheet-section-title">Previous puzzles</p>
-              <div className="sheet-date-grid">
-                {availableDates.slice(0, 14).map((date) => (
-                  <button
-                    key={date}
-                    type="button"
-                    className="sheet-date-button"
-                    data-active={date === currentDate}
-                    onClick={() => handleDateSelect(date)}
-                  >
-                    {date}
-                  </button>
-                ))}
-              </div>
+              <DatePicker
+                currentDate={currentDate}
+                maxDate={getTodaysGameDate()}
+                onDateSelect={handleDateSelect}
+              />
             </div>
           </div>
         </div>

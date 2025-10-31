@@ -1,0 +1,65 @@
+.date-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.date-picker-input {
+  appearance: none;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.85rem 1rem;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.date-picker-input:hover {
+  background: var(--color-surface-elevated);
+  border-color: var(--color-accent);
+}
+
+.date-picker-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+  outline: none;
+}
+
+.date-picker-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: var(--date-picker-icon-filter);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.date-picker-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Adjust icon color based on theme */
+:root {
+  --date-picker-icon-filter: invert(0);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --date-picker-icon-filter: invert(1);
+  }
+}
+
+[data-theme='dark'] {
+  --date-picker-icon-filter: invert(1);
+}
+
+[data-theme='light'] {
+  --date-picker-icon-filter: invert(0);
+}

@@ -4,11 +4,11 @@
 Crackle Date is a daily math puzzle Progressive Web App (PWA) where players create valid mathematical equations using the digits from today's date in exact order.
 
 **Technical Stack:**
-- **Frontend**: React 19.1 + TypeScript 5.8
-- **State Management**: Zustand 5.0 (lightweight global store)
-- **Math Processing**: mathjs 14.7 (secure expression evaluation and parsing)
-- **Math Rendering**: KaTeX 0.16 (LaTeX-quality mathematical notation)
-- **Build Tool**: Vite 7.1 (fast development and optimized production builds)
+- **Frontend**: React 19.1.1 + TypeScript 5.8.3
+- **State Management**: Zustand 5.0.8 (lightweight global store)
+- **Math Processing**: mathjs 14.7.0 (secure expression evaluation and parsing)
+- **Math Rendering**: KaTeX 0.16.22 (LaTeX-quality mathematical notation)
+- **Build Tool**: Vite 7.1.2 (fast development and optimized production builds)
 - **Styling**: Native CSS with CSS variables and design tokens
 - **Code Quality**: ESLint 9, Stylelint 16, Prettier 3.6, Husky + lint-staged
 
@@ -125,7 +125,7 @@ npm run format     # Format all source files with Prettier
 ### Build Configuration
 - **TypeScript**: Project references configured in `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`
 - **Vite**: Configured in `vite.config.ts` to output to `docs/` directory for GitHub Pages
-- **Vitest**: Test setup in `vitest.config.ts` and `src/test/setup.ts` with jsdom environment
+- **Vitest 3.2.4**: Test setup in `vitest.config.ts` and `src/test/setup.ts` with jsdom environment
 
 ### Linting & Formatting
 - **ESLint**: `eslint.config.js` using flat config format with React and TypeScript plugins

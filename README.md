@@ -143,13 +143,13 @@ npm run format     # Format code with Prettier
 
 ## 🏗️ Technology Stack
 
-- **Frontend**: React 19.1 + TypeScript 5.8
-- **State Management**: Zustand (lightweight, performant store)
-- **Math Engine**: mathjs 14.7 (secure expression evaluation and parsing)
-- **Math Rendering**: KaTeX 0.16 (LaTeX-quality mathematical notation)
+- **Frontend**: React 19.1.1 + TypeScript 5.8.3
+- **State Management**: Zustand 5.0.8 (lightweight, performant store)
+- **Math Engine**: mathjs 14.7.0 (secure expression evaluation and parsing)
+- **Math Rendering**: KaTeX 0.16.22 (LaTeX-quality mathematical notation)
 - **Styling**: Native CSS with CSS variables + design tokens in `src/index.css`
-- **Build Tooling**: Vite 7.1 + TypeScript project references
-- **Testing**: Vitest 3.2 + React Testing Library
+- **Build Tooling**: Vite 7.1.2 + TypeScript project references
+- **Testing**: Vitest 3.2.4 + React Testing Library
 - **Code Quality**: 
   - ESLint 9 with React and TypeScript rules
   - Stylelint 16 for CSS linting

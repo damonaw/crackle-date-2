@@ -251,11 +251,21 @@
   font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.35rem);
   line-height: 1.6;
   min-height: 4rem;
+  overflow-x: auto;
   padding: 0.85rem 1.1rem;
+  scrollbar-gutter: stable both-edges;
 }
 
 .equation-placeholder {
   color: var(--color-text-muted);
+}
+
+.equation-render {
+  display: inline-flex;
+  flex: 1;
+  font-weight: 600;
+  justify-content: flex-start;
+  min-width: 0;
 }
 
 .equation-actions {
@@ -453,10 +463,12 @@
   border-radius: 999px;
   color: var(--color-text-primary);
   cursor: pointer;
-  font-size: clamp(1.05rem, 0.7rem + 2.4vw, 1.4rem);
+  font-size: clamp(1.15rem, 0.95rem + 1.5vw, 1.5rem);
   font-weight: 600;
   letter-spacing: 0.04em;
-  padding: clamp(0.4rem, 0.32rem + 0.8vw, 0.6rem) clamp(0.85rem, 0.65rem + 1.2vw, 1.35rem);
+  line-height: 1.2;
+  padding: clamp(0.5rem, 0.42rem + 0.8vw, 0.75rem) clamp(1rem, 0.85rem + 1.4vw, 1.6rem);
+  white-space: nowrap;
 }
 
 .sheet-date-button[data-active='true'] {

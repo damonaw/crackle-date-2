@@ -605,33 +605,12 @@ export default function GameScreen() {
             </nav>
             <div className="sheet-section">
               <p className="sheet-section-title">Theme</p>
-              <p className="sheet-section-hint">Current: {themeMode}</p>
               <button type="button" className="secondary-button" onClick={cycleThemeMode}>
                 {nextThemeLabel}
               </button>
             </div>
             <div className="sheet-section">
-              <p className="sheet-section-title">Hints</p>
-              <p className="sheet-section-hint">
-                {remainingHints > 0
-                  ? `${remainingHints} hint${remainingHints === 1 ? '' : 's'} remaining today.`
-                  : 'No hints left today.'}
-              </p>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  handleHint();
-                }}
-                disabled={remainingHints <= 0}
-              >
-                Use a hint
-              </button>
-            </div>
-            <div className="sheet-section">
               <p className="sheet-section-title">Previous puzzles</p>
-              <p className="sheet-section-hint">Jump back to a recent date.</p>
               <div className="sheet-date-grid">
                 {availableDates.slice(0, 14).map((date) => (
                   <button

@@ -63,7 +63,7 @@ For **September 18, 2025** (9-18-2025):
 
 ### Installation
 ```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/damonaw/crackle-date-2.git
 cd crackle-date-2
 
@@ -74,15 +74,99 @@ npm install
 npm run dev
 ```
 
+## 🌐 Deployment
+
+This project is fully configured for GitHub Pages deployment with multiple options:
+
+### 🚀 Automatic Deployment (Recommended)
+Simply push to the `main` branch and GitHub Actions will deploy automatically:
+```bash
+git push origin main  # Triggers automatic deployment
+```
+
+### 📋 Manual Deployment
+```bash
+# Option 1: Use deployment script
+npm run deploy:prepare
+git add docs && git commit -m "Deploy" && git push
+
+# Option 2: Simple deploy
+npm run deploy
+
+# Option 3: Manual build
+npm run build
+# Upload docs/ folder to GitHub Pages settings
+```
+
+📖 **For detailed deployment instructions**, see [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+### Deployment Features
+- ✅ **Automatic GitHub Actions** workflow
+- ✅ **SPA routing** with 404.html fallback  
+- ✅ **PWA support** with manifest and service worker
+- ✅ **Relative asset paths** for flexible repository names
+- ✅ **Build validation** with tests and linting
+- ✅ **Multiple deployment options** for different workflows
+
 ### Available Scripts
 ```bash
-npm run dev        # Start development server
-npm run build      # Build for production
-npm run preview    # Preview production build
-npm run test       # Run tests
-npm run lint       # Run ESLint
-npm run format     # Format code with Prettier
+npm run dev            # Start development server
+npm run build          # Build for production
+npm run preview        # Preview production build
+npm run test           # Run tests
+npm run lint           # Run ESLint
+npm run format         # Format code with Prettier
+npm run deploy         # Build and commit to git (manual deploy)
+npm run deploy:prepare # Prepare build with validation (for GitHub Pages)
 ```
+
+## 🚀 GitHub Pages Deployment
+
+This project is configured for automatic GitHub Pages deployment via GitHub Actions.
+
+### Automatic Deployment (Recommended)
+1. Push changes to `main` branch
+2. GitHub Actions will automatically:
+   - Run tests and linting
+   - Build the project
+   - Deploy to GitHub Pages
+3. Site will be available at: `https://[username].github.io/crackle-date-2/`
+
+### Manual Deployment Options
+
+#### Option 1: Using Deploy Script
+```bash
+npm run deploy:prepare  # Prepares build with validation
+git add docs
+git commit -m "Deploy to GitHub Pages"
+git push origin main
+```
+
+#### Option 2: Using Build Script
+```bash
+npm run deploy  # Builds and commits automatically
+```
+
+#### Option 3: Manual Upload
+```bash
+npm run build
+# Upload contents of `docs/` folder to GitHub Pages settings
+```
+
+### Deployment Configuration
+- **Build Output**: `docs/` directory (configured in `vite.config.ts`)
+- **Base Path**: Relative (`./`) for flexible repository names
+- **SPA Routing**: `404.html` included for client-side routing
+- **PWA Support**: Manifest and service worker ready
+- **HTTPS**: Automatic SSL certificate via GitHub Pages
+
+### Environment Setup
+The project includes:
+- ✅ GitHub Actions workflow (`.github/workflows/deploy.yml`)
+- ✅ Vite configuration for GitHub Pages
+- ✅ 404.html for SPA routing
+- ✅ Relative asset paths
+- ✅ PWA manifest and icons
 
 ## 🎮 Features
 

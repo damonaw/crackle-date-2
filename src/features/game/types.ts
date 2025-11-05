@@ -33,6 +33,7 @@ export interface AchievementStatus extends AchievementDefinition {
   unlocked: boolean;
   unlockedOn?: string;
   progress?: string;
+  category?: string;
 }
 
 export interface DateDigits {

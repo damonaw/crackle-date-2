@@ -2,6 +2,9 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { evaluate } from 'mathjs';
 import MathEquation from '../../math/components/MathEquation';
 import StatsPanel from '../../stats/components/StatsPanel';
+import AchievementsPanel from '../../achievements/components/AchievementsPanel';
+import SolutionsPanel from '../../solutions/components/SolutionsPanel';
+import TutorialPanel from '../../tutorial/components/TutorialPanel';
 import { useThemeMode } from '../../theme/hooks/useThemeMode';
 import { useGameStore } from '../state/game-store';
 import { getDateDigits, getDigitsArray, getTodaysGameDate } from '../lib/dateUtils';
@@ -11,7 +14,7 @@ import { calculateScore, getScoreDescription } from '../lib/scoring';
 import DatePicker from './DatePicker';
 import './game-screen.css';
 
-type ViewMode = 'game' | 'stats';
+type ViewMode = 'game' | 'stats' | 'achievements' | 'solutions' | 'tutorial';
 type ToastTone = 'success' | 'error' | 'info';
 
 type OperatorToken = {
@@ -597,63 +600,104 @@ export default function GameScreen() {
               </div>
             </div>
           </section>
-        ) : (
-          <StatsPanel
+        ) : view === 'stats' ? (
+          <StatsPanel onBack={() => setView('game')} score={score} streak={streak} />
+        ) : view === 'solutions' ? (
+          <SolutionsPanel
             onBack={() => setView('game')}
-            score={score}
-            streak={streak}
             solutions={solutions}
             currentDate={currentDate}
-            achievements={achievements}
             onShare={handleShareSolutions}
           />
+        ) : view === 'tutorial' ? (
+          <TutorialPanel onBack={() => setView('game')} />
+        ) : (
+          <AchievementsPanel onBack={() => setView('game')} achievements={achievements} />
         )}
       </main>
 
       {menuOpen && (
-        <div className="sheet" role="dialog" aria-modal="true">
-          <div className="sheet-content">
-            <header className="sheet-header">
+        <div className="menu-panel" role="dialog" aria-modal="true">
+          <div className="menu-panel-content">
+            <header className="menu-panel-header">
               <h2>Menu</h2>
               <button
                 type="button"
-                className="icon-button"
+                className="menu-panel-close"
                 aria-label="Close menu"
                 onClick={() => setMenuOpen(false)}
               >
                 ✕
               </button>
             </header>
-            <nav className="sheet-nav">
-              <button
-                type="button"
-                className="sheet-link"
-                onClick={() => {
-                  setView('stats');
-                  setMenuOpen(false);
-                }}
-              >
-                Stats
-              </button>
-              <button
-                type="button"
-                className="sheet-link"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setShowTutorial(true);
-                }}
-              >
-                Tutorial
-              </button>
-            </nav>
-            <div className="sheet-section">
-              <p className="sheet-section-title">Theme</p>
+            <div className="menu-panel-summary">
+              <nav className="menu-panel-nav">
+                <button
+                  type="button"
+                  className="menu-panel-item"
+                  onClick={() => {
+                    setView('stats');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <div className="menu-panel-item-content">
+                    <div className="menu-panel-item-title">Stats</div>
+                    <div className="menu-panel-item-description">
+                      View your performance and progress
+                    </div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  className="menu-panel-item"
+                  onClick={() => {
+                    setView('solutions');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <div className="menu-panel-item-content">
+                    <div className="menu-panel-item-title">Solutions</div>
+                    <div className="menu-panel-item-description">
+                      Browse your equation solutions
+                    </div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  className="menu-panel-item"
+                  onClick={() => {
+                    setView('achievements');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <div className="menu-panel-item-content">
+                    <div className="menu-panel-item-title">Achievements</div>
+                    <div className="menu-panel-item-description">Track your accomplishments</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  className="menu-panel-item"
+                  onClick={() => {
+                    setView('tutorial');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <div className="menu-panel-item-content">
+                    <div className="menu-panel-item-title">Tutorial</div>
+                    <div className="menu-panel-item-description">Learn how to play</div>
+                  </div>
+                </button>
+              </nav>
+            </div>
+            <div className="menu-panel-section">
+              <p className="menu-panel-section-title">Theme</p>
               <button type="button" className="secondary-button" onClick={cycleThemeMode}>
                 {nextThemeLabel}
               </button>
             </div>
-            <div className="sheet-section">
-              <p className="sheet-section-title">Easy Mode</p>
+            <div className="menu-panel-section">
+              <p className="menu-panel-section-title">Easy Mode</p>
               <button
                 type="button"
                 className="secondary-button"
@@ -662,8 +706,8 @@ export default function GameScreen() {
                 {easyMode ? 'Disable easy mode' : 'Enable easy mode'}
               </button>
             </div>
-            <div className="sheet-section">
-              <p className="sheet-section-title">Previous puzzles</p>
+            <div className="menu-panel-section">
+              <p className="menu-panel-section-title">Previous puzzles</p>
               <DatePicker
                 currentDate={currentDate}
                 maxDate={getTodaysGameDate()}

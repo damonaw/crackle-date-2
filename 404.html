@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Crackle Date - Daily Math Puzzle</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Daily math puzzle game using today's date digits" />
+    <meta name="theme-color" content="#6200EE" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#BB86FC" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Crackle Date" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json" />
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="./icon.svg" />
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+
+    <!-- KaTeX CSS for mathematical notation -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+    
+    <!-- Custom math equation styles -->
+    <style>
+      .math-equation {
+        font-family: 'Times New Roman', 'Times', serif;
+        font-size: 18px;
+        font-style: italic;
+        letter-spacing: 0.5px;
+        line-height: 1.6;
+      }
+      .math-equation .katex {
+        font-size: 1em;
+      }
+      .fraction {
+        display: inline-block;
+        position: relative;
+        vertical-align: middle;
+      }
+      .fraction sup {
+        vertical-align: top;
+        font-size: 0.7em;
+      }
+      .fraction sub {
+        vertical-align: bottom;
+        font-size: 0.7em;
+      }
+      .expression {
+        display: inline-block;
+      }
+      .expression sup {
+        font-size: 0.8em;
+        vertical-align: top;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/main.tsx"></script>
+    
+    <!-- KaTeX JavaScript for mathematical notation -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js" integrity="sha384-cMkvdD8LoxVzGF/RPUKAcvmm49FQ0oxwDF3BGKtDXcEc+T1b2N+teh/OJfpU0jr6" crossorigin="anonymous"></script>
+  </body>
+</html>

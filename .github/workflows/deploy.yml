@@ -31,8 +31,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run tests
+        run: npm run test:run
+
+      - name: Lint code
+        run: npm run lint
+
       - name: Build site
         run: npm run build
+
+      - name: Copy 404.html to docs
+        run: cp 404.html docs/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

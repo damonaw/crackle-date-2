@@ -11,6 +11,7 @@ export interface GameState {
   startTime: number | null;
   easyMode: boolean;
   inputClicks: number;
+  showInputClicks: boolean;
 }
 
 export interface Solution {

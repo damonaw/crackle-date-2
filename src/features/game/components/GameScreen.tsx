@@ -153,6 +153,8 @@ export default function GameScreen() {
   const setEasyMode = useGameStore((state) => state.setEasyMode);
   const inputClicks = useGameStore((state) => state.inputClicks);
   const incrementInputClicks = useGameStore((state) => state.incrementInputClicks);
+  const showInputClicks = useGameStore((state) => state.showInputClicks);
+  const setShowInputClicks = useGameStore((state) => state.setShowInputClicks);
 
   const { themeMode, resolvedMode, cycleThemeMode, nextThemeMode } = useThemeMode();
 
@@ -566,10 +568,12 @@ export default function GameScreen() {
                   )}
                 </div>
 
-                <div className="input-clicks-indicator" aria-live="polite">
-                  <span className="input-clicks-label">Input clicks</span>
-                  <span className="input-clicks-value">{inputClicks}</span>
-                </div>
+                {showInputClicks && (
+                  <div className="input-clicks-indicator" aria-live="polite">
+                    <span className="input-clicks-label">Input clicks</span>
+                    <span className="input-clicks-value">{inputClicks}</span>
+                  </div>
+                )}
 
                 {easyMode && easyModeValues && (
                   <div className="easy-mode-values" aria-label="Equation side values">
@@ -648,10 +652,23 @@ export default function GameScreen() {
       </main>
 
       {menuOpen && (
-        <div className="menu-panel" role="dialog" aria-modal="true">
-          <div className="menu-panel-content">
+        <div
+          className="menu-panel"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setMenuOpen(false)}
+        >
+          <div
+            className="menu-panel-card"
+            role="document"
+            onClick={(event) => event.stopPropagation()}
+          >
             <header className="menu-panel-header">
-              <h2>Menu</h2>
+              <div>
+                <p className="menu-panel-subtitle">Quick access</p>
+                <h2>Menu</h2>
+                <p className="menu-panel-description">Navigate or tweak the experience.</p>
+              </div>
               <button
                 type="button"
                 className="menu-panel-close"
@@ -661,89 +678,111 @@ export default function GameScreen() {
                 ✕
               </button>
             </header>
-            <div className="menu-panel-summary">
-              <nav className="menu-panel-nav">
+            <div className="menu-panel-body">
+              <section className="menu-panel-section">
+                <p className="menu-panel-label">Navigate</p>
+                <div className="menu-panel-actions">
+                  <button
+                    type="button"
+                    className="menu-nav-button"
+                    onClick={() => {
+                      setView('stats');
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <span className="menu-nav-title">Stats</span>
+                    <span className="menu-nav-description">Performance overview</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="menu-nav-button"
+                    onClick={() => {
+                      setView('solutions');
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <span className="menu-nav-title">Solutions</span>
+                    <span className="menu-nav-description">See past equations</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="menu-nav-button"
+                    onClick={() => {
+                      setView('achievements');
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <span className="menu-nav-title">Achievements</span>
+                    <span className="menu-nav-description">Unlocked goals</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="menu-nav-button"
+                    onClick={() => {
+                      setView('tutorial');
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <span className="menu-nav-title">Tutorial</span>
+                    <span className="menu-nav-description">How to play</span>
+                  </button>
+                </div>
+              </section>
+
+              <section className="menu-panel-section">
+                <p className="menu-panel-label">Settings</p>
+                <div className="menu-setting-card">
+                  <div>
+                    <p className="menu-setting-title">Theme</p>
+                    <p className="menu-setting-description">{nextThemeLabel}</p>
+                  </div>
+                  <button type="button" className="menu-setting-button" onClick={cycleThemeMode}>
+                    Change
+                  </button>
+                </div>
                 <button
                   type="button"
-                  className="menu-panel-item"
-                  onClick={() => {
-                    setView('stats');
-                    setMenuOpen(false);
-                  }}
+                  className="menu-toggle"
+                  aria-pressed={easyMode}
+                  onClick={() => setEasyMode(!easyMode)}
                 >
-                  <div className="menu-panel-item-content">
-                    <div className="menu-panel-item-title">Stats</div>
-                    <div className="menu-panel-item-description">
-                      View your performance and progress
-                    </div>
+                  <div>
+                    <p className="menu-toggle-title">Easy mode</p>
+                    <p className="menu-toggle-description">Preview each side of the equation</p>
                   </div>
+                  <span className="menu-toggle-indicator" data-state={easyMode ? 'on' : 'off'}>
+                    {easyMode ? 'On' : 'Off'}
+                  </span>
                 </button>
                 <button
                   type="button"
-                  className="menu-panel-item"
-                  onClick={() => {
-                    setView('solutions');
-                    setMenuOpen(false);
-                  }}
+                  className="menu-toggle"
+                  aria-pressed={showInputClicks}
+                  onClick={() => setShowInputClicks(!showInputClicks)}
                 >
-                  <div className="menu-panel-item-content">
-                    <div className="menu-panel-item-title">Solutions</div>
-                    <div className="menu-panel-item-description">
-                      Browse your equation solutions
-                    </div>
+                  <div>
+                    <p className="menu-toggle-title">Show input clicks</p>
+                    <p className="menu-toggle-description">
+                      Toggle the click counter on the game board
+                    </p>
                   </div>
+                  <span
+                    className="menu-toggle-indicator"
+                    data-state={showInputClicks ? 'on' : 'off'}
+                  >
+                    {showInputClicks ? 'On' : 'Off'}
+                  </span>
                 </button>
-                <button
-                  type="button"
-                  className="menu-panel-item"
-                  onClick={() => {
-                    setView('achievements');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <div className="menu-panel-item-content">
-                    <div className="menu-panel-item-title">Achievements</div>
-                    <div className="menu-panel-item-description">Track your accomplishments</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  className="menu-panel-item"
-                  onClick={() => {
-                    setView('tutorial');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <div className="menu-panel-item-content">
-                    <div className="menu-panel-item-title">Tutorial</div>
-                    <div className="menu-panel-item-description">Learn how to play</div>
-                  </div>
-                </button>
-              </nav>
-            </div>
-            <div className="menu-panel-section">
-              <p className="menu-panel-section-title">Theme</p>
-              <button type="button" className="secondary-button" onClick={cycleThemeMode}>
-                {nextThemeLabel}
-              </button>
-            </div>
-            <div className="menu-panel-section">
-              <p className="menu-panel-section-title">Easy Mode</p>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setEasyMode(!easyMode)}
-              >
-                {easyMode ? 'Disable easy mode' : 'Enable easy mode'}
-              </button>
-            </div>
-            <div className="menu-panel-section">
-              <p className="menu-panel-section-title">Previous puzzles</p>
-              <DatePicker
-                currentDate={currentDate}
-                maxDate={getTodaysGameDate()}
-                onDateSelect={handleDateSelect}
-              />
+              </section>
+
+              <section className="menu-panel-section">
+                <p className="menu-panel-label">Previous puzzles</p>
+                <DatePicker
+                  currentDate={currentDate}
+                  maxDate={getTodaysGameDate()}
+                  onDateSelect={handleDateSelect}
+                />
+              </section>
             </div>
           </div>
         </div>

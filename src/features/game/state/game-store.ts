@@ -34,6 +34,7 @@ interface GameStore extends GameState {
   startTimer: () => void;
   setEasyMode: (enabled: boolean) => void;
   incrementInputClicks: () => void;
+  setShowInputClicks: (visible: boolean) => void;
 }
 
 const RECENT_DATES_TO_SHOW = 7;
@@ -53,6 +54,7 @@ const initialState: GameState = {
   startTime: null,
   easyMode: false,
   inputClicks: 0,
+  showInputClicks: true,
 };
 
 const sortDatesDesc = (dates: string[]): string[] =>
@@ -110,6 +112,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     themeMode: prefs.themeMode ?? 'system',
     tutorialSeen: prefs.tutorialSeen ?? false,
     easyMode: prefs.easyMode ?? false,
+    showInputClicks: prefs.showInputClicks ?? true,
     streak: stats.currentStreak,
 
     setEquation: (equation: string) => {
@@ -212,6 +215,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         themeMode: prefsSnapshot.themeMode ?? 'system',
         tutorialSeen: prefsSnapshot.tutorialSeen ?? false,
         easyMode: prefsSnapshot.easyMode ?? false,
+        showInputClicks: prefsSnapshot.showInputClicks ?? true,
       });
 
       get().saveGameState();
@@ -310,6 +314,12 @@ export const useGameStore = create<GameStore>((set, get) => {
       set({ easyMode: enabled });
       const prefsSnapshot = getUserPreferences();
       saveUserPreferences({ ...prefsSnapshot, easyMode: enabled });
+    },
+
+    setShowInputClicks: (visible: boolean) => {
+      set({ showInputClicks: visible });
+      const prefsSnapshot = getUserPreferences();
+      saveUserPreferences({ ...prefsSnapshot, showInputClicks: visible });
     },
   };
 });

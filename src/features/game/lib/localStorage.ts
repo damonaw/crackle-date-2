@@ -62,6 +62,7 @@ export interface UserPreferences {
   themeMode?: ThemeMode; // new preferred field
   tutorialSeen?: boolean;
   easyMode?: boolean;
+  showInputClicks?: boolean;
 }
 
 const STORAGE_KEYS = {
@@ -410,6 +411,7 @@ export const getUserPreferences = (): UserPreferences => {
     themeMode: 'system',
     tutorialSeen: false,
     easyMode: false,
+    showInputClicks: true,
   };
 
   const prefs = loadFromStorage(STORAGE_KEYS.USER_PREFS, defaultPrefs);
@@ -422,6 +424,9 @@ export const getUserPreferences = (): UserPreferences => {
   }
   if (typeof prefs.easyMode !== 'boolean') {
     prefs.easyMode = false;
+  }
+  if (typeof prefs.showInputClicks !== 'boolean') {
+    prefs.showInputClicks = true;
   }
   return prefs;
 };

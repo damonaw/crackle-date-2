@@ -5,6 +5,7 @@
   --color-accent-contrast: rgb(255 255 255);
   --color-accent-glow: rgb(99 102 241 / 18%);
   --color-accent-soft: rgb(99 102 241 / 12%);
+  --color-primary: rgb(99 102 241);
   --color-background: rgb(244 246 255);
   --color-surface: rgb(255 255 255);
   --color-surface-muted: rgb(248 250 255);
@@ -18,6 +19,10 @@
   --color-text-muted: rgb(100 116 139);
   --color-text-primary: rgb(15 23 42);
   --color-text-secondary: rgb(71 85 105);
+  --color-operator-bg-start: rgb(245 240 255);
+  --color-operator-bg-end: rgb(229 239 255);
+  --color-operator-border: rgb(196 181 253);
+  --color-operator-text: rgb(34 21 61);
   --shadow-accent: 0 16px 32px rgb(99 102 241 / 25%);
   --shadow-soft: 0 18px 36px rgb(15 23 42 / 12%);
   --shadow-strong: 0 22px 48px rgb(15 23 42 / 16%);
@@ -26,26 +31,31 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --color-accent: rgb(129 140 248);
-  --color-accent-contrast: rgb(15 23 42);
-  --color-accent-glow: rgb(129 140 248 / 28%);
-  --color-accent-soft: rgb(129 140 248 / 18%);
-  --color-background: rgb(15 23 42);
-  --color-surface: rgb(22 33 64);
-  --color-surface-muted: rgb(30 41 76);
-  --color-surface-elevated: rgb(42 56 98 / 88%);
-  --color-border: rgb(148 163 184 / 35%);
-  --color-border-soft: rgb(148 163 184 / 20%);
+  --color-accent: rgb(203 165 255);
+  --color-accent-contrast: rgb(15 6 30);
+  --color-accent-glow: rgb(167 139 250 / 45%);
+  --color-accent-soft: rgb(167 139 250 / 30%);
+  --color-primary: rgb(214 189 255);
+  --color-background: rgb(12 7 24);
+  --color-surface: rgb(22 13 42);
+  --color-surface-muted: rgb(30 17 54);
+  --color-surface-elevated: rgb(44 24 76 / 90%);
+  --color-border: rgb(210 188 255 / 35%);
+  --color-border-soft: rgb(210 188 255 / 18%);
   --color-danger: rgb(248 113 113);
-  --color-header-background: rgb(15 23 42 / 78%);
-  --color-shadow-soft: rgb(2 6 23 / 55%);
+  --color-header-background: rgb(13 7 28 / 82%);
+  --color-shadow-soft: rgb(6 3 16 / 70%);
   --color-success: rgb(74 222 128);
-  --color-text-muted: rgb(148 163 184);
-  --color-text-primary: rgb(248 250 252);
-  --color-text-secondary: rgb(203 213 245);
-  --shadow-accent: 0 20px 40px rgb(129 140 248 / 50%);
-  --shadow-soft: 0 20px 40px rgb(2 6 23 / 65%);
-  --shadow-strong: 0 26px 56px rgb(2 6 23 / 70%);
+  --color-text-muted: rgb(189 176 221);
+  --color-text-primary: rgb(244 237 255);
+  --color-text-secondary: rgb(214 197 252);
+  --color-operator-bg-start: rgb(40 20 68);
+  --color-operator-bg-end: rgb(27 14 48);
+  --color-operator-border: rgb(210 188 255 / 30%);
+  --color-operator-text: rgb(239 233 255);
+  --shadow-accent: 0 20px 40px rgb(134 86 255 / 55%);
+  --shadow-soft: 0 20px 40px rgb(5 2 12 / 65%);
+  --shadow-strong: 0 26px 56px rgb(5 2 12 / 75%);
 }
 
 * {

@@ -386,10 +386,11 @@
 }
 
 .operator-button {
-  background: var(--color-surface-muted);
-  border: none;
+  background: linear-gradient(135deg, var(--color-operator-bg-start), var(--color-operator-bg-end));
+  border: 1px solid var(--color-operator-border);
   border-radius: 0.75rem;
-  color: var(--color-text-primary);
+  box-shadow: 0 6px 14px var(--color-shadow-soft);
+  color: var(--color-operator-text);
   cursor: pointer;
   font-size: 1rem;
   font-weight: 600;
@@ -401,11 +402,16 @@
 
 .operator-button:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.55;
+}
+
+.operator-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .operator-button:hover:not(:disabled) {
-  box-shadow: 0 6px 16px var(--color-shadow-soft);
+  box-shadow: 0 10px 20px var(--color-shadow-soft);
   transform: translateY(-1px);
 }
 
@@ -620,165 +626,243 @@
   }
 }
 
-/* Menu Panel Styles - matching other panels */
 .menu-panel {
-  align-items: center;
-  backdrop-filter: blur(12px);
-  background: rgb(15 23 42 / 60%);
+  align-items: stretch;
+  backdrop-filter: blur(8px);
+  background: rgb(4 7 29 / 70%);
   display: flex;
   inset: 0;
-  justify-content: center;
-  padding: 2rem 1rem;
+  justify-content: flex-end;
   position: fixed;
   z-index: 50;
 }
 
-.menu-panel-content {
+.menu-panel-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin: 0 auto;
-  max-width: 800px;
-  padding: 1.5rem;
-  width: min(800px, 100%);
-}
-
-.menu-panel-header {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-
-.menu-panel-header h2 {
-  color: var(--color-text-primary);
-  font-size: 2rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.menu-panel-close {
-  align-items: center;
-  background: none;
-  border: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  display: flex;
-  font-size: 1.5rem;
-  height: 2.5rem;
-  justify-content: center;
-  padding: 0;
-  transition: color 0.2s ease;
-  width: 2.5rem;
-}
-
-.menu-panel-close:hover {
-  color: var(--color-text-primary);
-}
-
-.menu-panel-summary {
+  border-left: 1px solid var(--color-border);
+  box-shadow: -20px 0 30px rgb(2 6 23 / 35%);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  height: 100%;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  width: min(420px, 100%);
 }
 
-.menu-panel-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+@media (width >= 768px) {
+  .menu-panel-card {
+    border-radius: 1rem 0 0 1rem;
+  }
 }
 
-.menu-panel-item {
+.menu-panel-header {
   align-items: flex-start;
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  color: var(--color-text-primary);
-  cursor: pointer;
   display: flex;
-  gap: 0.75rem;
-  padding: 1rem;
-  text-align: left;
-  transition: all 0.2s ease;
-  width: 100%;
+  gap: 1rem;
+  justify-content: space-between;
 }
 
-.menu-panel-item:hover {
-  background: var(--color-background);
-  border-color: var(--color-primary);
-  box-shadow: 0 2px 4px rgb(0 0 0 / 10%);
-  transform: translateY(-1px);
-}
-
-.menu-panel-item-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.menu-panel-item-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.menu-panel-item-description {
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.menu-panel-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.menu-panel-section-title {
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: 0.025em;
+.menu-panel-subtitle {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
   margin: 0;
   text-transform: uppercase;
 }
 
-/* iPhone SE menu adjustments */
-@media (width <= 320px) {
-  .menu-panel {
-    padding: 1rem 0.5rem;
-  }
+.menu-panel-header h2 {
+  color: var(--color-text-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0.25rem 0 0;
+}
 
-  .menu-panel-content {
-    gap: 1rem;
-    padding: 1rem;
-  }
+.menu-panel-description {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0;
+}
 
-  .menu-panel-header {
-    margin-bottom: 0.5rem;
-  }
+.menu-panel-close {
+  align-items: center;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  font-size: 1.25rem;
+  height: 2.5rem;
+  justify-content: center;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+  width: 2.5rem;
+}
 
-  .menu-panel-header h2 {
-    font-size: 1.5rem;
-  }
+.menu-panel-close:hover {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+}
 
-  .menu-panel-item {
-    padding: 0.75rem;
+.menu-panel-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+.menu-panel-section {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.menu-panel-label {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.menu-panel-actions {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.menu-nav-button {
+  align-items: flex-start;
+  background: var(--color-background);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 0.75rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.9rem;
+  text-align: left;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.menu-nav-button:hover {
+  box-shadow: 0 6px 18px var(--color-shadow-soft);
+  transform: translateY(-2px);
+}
+
+.menu-nav-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.menu-nav-description {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.menu-setting-card {
+  align-items: center;
+  background: var(--color-background);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 0.75rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+}
+
+.menu-setting-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.menu-setting-description {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  margin: 0.1rem 0 0;
+}
+
+.menu-setting-button {
+  background: var(--color-accent);
+  border: none;
+  border-radius: 999px;
+  color: var(--color-accent-contrast);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  transition: transform 0.2s ease;
+}
+
+.menu-setting-button:hover {
+  transform: translateY(-1px);
+}
+
+.menu-toggle {
+  align-items: center;
+  background: var(--color-background);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 0.75rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  transition: border-color 0.2s ease;
+  width: 100%;
+}
+
+.menu-toggle:hover {
+  border-color: var(--color-accent);
+}
+
+.menu-toggle-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.menu-toggle-description {
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  margin: 0.15rem 0 0;
+}
+
+.menu-toggle-indicator {
+  background: var(--color-surface-muted);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 3rem;
+  padding: 0.25rem 0.75rem;
+  text-align: center;
+}
+
+.menu-toggle-indicator[data-state='on'] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+@media (width <= 480px) {
+  .menu-panel-card {
+    width: 100%;
   }
 
   .menu-panel-section {
-    gap: 0.25rem;
-    padding: 0.5rem;
-  }
-
-  .menu-panel-section-title {
-    font-size: 0.75rem;
-    margin-bottom: 0.25rem;
+    padding: 0.85rem;
   }
 }
 

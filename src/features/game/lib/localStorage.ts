@@ -28,6 +28,7 @@ export interface StoredSolutionData {
   complexity?: ComplexityLevel;
   timeToSolve?: number;
   wrongAttempts?: number;
+  inputClicks?: number;
 }
 
 export interface StoredDayState {
@@ -37,6 +38,7 @@ export interface StoredDayState {
   completed: boolean;
   wrongAttempts?: number;
   startTime?: number | null;
+  inputClicks?: number;
 }
 
 export interface GameData {
@@ -76,6 +78,7 @@ const normalizeSolutions = (solutions: StoredSolutionData[] = []): StoredSolutio
     complexity: solution.complexity,
     timeToSolve: solution.timeToSolve,
     wrongAttempts: solution.wrongAttempts,
+    inputClicks: solution.inputClicks,
   }));
 
 const normalizeDayState = (state?: Partial<StoredDayState>): StoredDayState => {
@@ -88,6 +91,7 @@ const normalizeDayState = (state?: Partial<StoredDayState>): StoredDayState => {
     completed: state?.completed ?? normalizedSolutions.length > 0,
     wrongAttempts: typeof state?.wrongAttempts === 'number' ? state.wrongAttempts : 0,
     startTime: state?.startTime ?? null,
+    inputClicks: typeof state?.inputClicks === 'number' ? state.inputClicks : 0,
   };
 };
 
@@ -106,6 +110,7 @@ const convertLegacyGameData = (legacy: LegacyGameData): GameData => {
         completed: legacy.completedToday,
         wrongAttempts: 0,
         startTime: null,
+        inputClicks: 0,
       }),
     },
   };

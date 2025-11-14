@@ -191,14 +191,16 @@
 }
 
 .solutions-panel-time,
-.solutions-panel-attempts {
+.solutions-panel-attempts,
+.solutions-panel-clicks {
   align-items: center;
   display: flex;
   gap: 0.25rem;
 }
 
 .solutions-panel-time svg,
-.solutions-panel-attempts svg {
+.solutions-panel-attempts svg,
+.solutions-panel-clicks svg {
   opacity: 0.7;
 }
 

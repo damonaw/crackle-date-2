@@ -151,6 +151,8 @@ export default function GameScreen() {
   const incrementWrongAttempts = useGameStore((state) => state.incrementWrongAttempts);
   const easyMode = useGameStore((state) => state.easyMode);
   const setEasyMode = useGameStore((state) => state.setEasyMode);
+  const inputClicks = useGameStore((state) => state.inputClicks);
+  const incrementInputClicks = useGameStore((state) => state.incrementInputClicks);
 
   const { themeMode, resolvedMode, cycleThemeMode, nextThemeMode } = useThemeMode();
 
@@ -279,17 +281,30 @@ export default function GameScreen() {
   );
 
   const clearEquation = useCallback(() => {
+    if (!equation) {
+      return;
+    }
+    incrementInputClicks();
     setEquation('');
-  }, [setEquation]);
+  }, [equation, incrementInputClicks, setEquation]);
 
   const removeLastChar = useCallback(() => {
+    if (equation.length === 0) {
+      return;
+    }
+    incrementInputClicks();
     setEquation(equation.slice(0, -1));
-  }, [equation, setEquation]);
+  }, [equation, incrementInputClicks, setEquation]);
 
   const addToken = useCallback(
     (token: string) => {
+      const recordInput = () => {
+        incrementInputClicks();
+      };
+
       if (token === 'sqrt(' || token === 'abs(') {
         setEquation(equation + token);
+        recordInput();
         return;
       }
 
@@ -301,11 +316,12 @@ export default function GameScreen() {
       const validation = validateEquationInput(equation, token, currentDate);
       if (validation.isValid) {
         setEquation(equation + token);
+        recordInput();
       } else if (validation.error) {
         showToast('error', validation.error);
       }
     },
-    [currentDate, equation, setEquation, showToast]
+    [currentDate, equation, incrementInputClicks, setEquation, showToast]
   );
 
   const handleDigitPress = useCallback(
@@ -382,6 +398,7 @@ export default function GameScreen() {
     const handler = (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
         event.preventDefault();
+        incrementInputClicks();
         if (isEquationReadyForSubmission()) {
           submitEquation();
         } else {
@@ -428,6 +445,7 @@ export default function GameScreen() {
     digitsArray,
     equation.length,
     isEquationReadyForSubmission,
+    incrementInputClicks,
     removeLastChar,
     showToast,
     submitEquation,
@@ -548,6 +566,11 @@ export default function GameScreen() {
                   )}
                 </div>
 
+                <div className="input-clicks-indicator" aria-live="polite">
+                  <span className="input-clicks-label">Input clicks</span>
+                  <span className="input-clicks-value">{inputClicks}</span>
+                </div>
+
                 {easyMode && easyModeValues && (
                   <div className="easy-mode-values" aria-label="Equation side values">
                     <div className="easy-mode-side">
@@ -571,7 +594,10 @@ export default function GameScreen() {
                   <button
                     type="button"
                     className="primary-button"
-                    onClick={submitEquation}
+                    onClick={() => {
+                      incrementInputClicks();
+                      submitEquation();
+                    }}
                     disabled={!isEquationReadyForSubmission()}
                   >
                     Submit
@@ -601,7 +627,12 @@ export default function GameScreen() {
             </div>
           </section>
         ) : view === 'stats' ? (
-          <StatsPanel onBack={() => setView('game')} score={score} streak={streak} />
+          <StatsPanel
+            onBack={() => setView('game')}
+            score={score}
+            streak={streak}
+            inputClicks={inputClicks}
+          />
         ) : view === 'solutions' ? (
           <SolutionsPanel
             onBack={() => setView('game')}

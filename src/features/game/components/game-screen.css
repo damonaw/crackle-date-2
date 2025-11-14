@@ -265,6 +265,32 @@
   min-width: 0;
 }
 
+.input-clicks-indicator {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: 0.75rem;
+  color: var(--color-text-secondary);
+  display: flex;
+  font-size: 0.9rem;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.9rem;
+}
+
+.input-clicks-label {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.input-clicks-value {
+  color: var(--color-primary);
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
 .easy-mode-values {
   align-items: center;
   background: var(--color-surface-muted);

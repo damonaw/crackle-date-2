@@ -10,6 +10,7 @@ export interface GameState {
   wrongAttempts: number;
   startTime: number | null;
   easyMode: boolean;
+  inputClicks: number;
 }
 
 export interface Solution {
@@ -19,6 +20,7 @@ export interface Solution {
   complexity: ComplexityLevel;
   timeToSolve?: number;
   wrongAttempts?: number;
+  inputClicks?: number;
 }
 
 export type ComplexityLevel = 'trivial' | 'simple' | 'moderate' | 'complex' | 'advanced';

@@ -5,9 +5,10 @@ interface StatsPanelProps {
   onBack?: () => void;
   score: number;
   streak: number;
+  inputClicks: number;
 }
 
-export default function StatsPanel({ onBack, score, streak }: StatsPanelProps) {
+export default function StatsPanel({ onBack, score, streak, inputClicks }: StatsPanelProps) {
   const stats = useMemo(() => {
     const averageScore = score > 0 ? Math.round(score / Math.max(streak, 1)) : 0;
     return {
@@ -15,8 +16,9 @@ export default function StatsPanel({ onBack, score, streak }: StatsPanelProps) {
       currentStreak: streak,
       averageScore,
       daysPlayed: streak,
+      currentClicks: inputClicks,
     };
-  }, [score, streak]);
+  }, [inputClicks, score, streak]);
 
   return (
     <section className="stats-panel" aria-label="Player statistics">
@@ -52,6 +54,10 @@ export default function StatsPanel({ onBack, score, streak }: StatsPanelProps) {
           <div className="stats-panel-stat">
             <div className="stats-panel-stat-value">{stats.daysPlayed}</div>
             <div className="stats-panel-stat-label">Days Played</div>
+          </div>
+          <div className="stats-panel-stat">
+            <div className="stats-panel-stat-value">{stats.currentClicks}</div>
+            <div className="stats-panel-stat-label">Current Clicks</div>
           </div>
         </div>
       </div>

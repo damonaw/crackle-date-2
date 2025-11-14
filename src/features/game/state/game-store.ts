@@ -33,6 +33,7 @@ interface GameStore extends GameState {
   incrementWrongAttempts: () => void;
   startTimer: () => void;
   setEasyMode: (enabled: boolean) => void;
+  incrementInputClicks: () => void;
 }
 
 const RECENT_DATES_TO_SHOW = 7;
@@ -51,6 +52,7 @@ const initialState: GameState = {
   wrongAttempts: 0,
   startTime: null,
   easyMode: false,
+  inputClicks: 0,
 };
 
 const sortDatesDesc = (dates: string[]): string[] =>
@@ -77,6 +79,7 @@ const hydrateDayState = (dayState?: StoredDayState) => {
         complexity: stored.complexity ?? 'simple',
         timeToSolve: stored.timeToSolve,
         wrongAttempts: stored.wrongAttempts,
+        inputClicks: stored.inputClicks,
       }))
     : [];
 
@@ -88,6 +91,7 @@ const hydrateDayState = (dayState?: StoredDayState) => {
     isValid: dayState?.isValid ?? false,
     wrongAttempts: dayState?.wrongAttempts ?? 0,
     startTime: dayState?.startTime ?? null,
+    inputClicks: dayState?.inputClicks ?? 0,
     score,
   };
 };
@@ -135,6 +139,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         complexity,
         timeToSolve,
         wrongAttempts: state.wrongAttempts,
+        inputClicks: state.inputClicks,
       };
 
       set((currentState) => ({
@@ -143,6 +148,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         availableDates: sortDatesDesc([...currentState.availableDates, currentState.currentDate]),
         wrongAttempts: 0,
         startTime: null,
+        inputClicks: 0,
       }));
 
       get().updateStats(true, score, wasEmpty);
@@ -173,6 +179,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         solutions: [],
         wrongAttempts: 0,
         startTime: null,
+        inputClicks: 0,
         availableDates: sortDatesDesc([...state.availableDates, todaysDate]),
         streak: state.gameStats.currentStreak,
       }));
@@ -197,6 +204,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         score: hydrated.score,
         wrongAttempts: hydrated.wrongAttempts,
         startTime: hydrated.startTime,
+        inputClicks: hydrated.inputClicks ?? 0,
         availableDates: buildAvailableDates(history, currentDate),
         gameStats: statsSnapshot,
         streak: statsSnapshot.currentStreak,
@@ -223,11 +231,13 @@ export const useGameStore = create<GameStore>((set, get) => {
           complexity: sol.complexity,
           timeToSolve: sol.timeToSolve,
           wrongAttempts: sol.wrongAttempts,
+          inputClicks: sol.inputClicks,
         })),
         isValid: state.isValid,
         completed: state.solutions.length > 0,
         wrongAttempts: state.wrongAttempts,
         startTime: state.startTime,
+        inputClicks: state.inputClicks,
       };
 
       saveGameData({
@@ -262,6 +272,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         score: hydrated.score,
         wrongAttempts: hydrated.wrongAttempts,
         startTime: hydrated.startTime,
+        inputClicks: hydrated.inputClicks ?? 0,
         availableDates: buildAvailableDates(history, date),
       });
 
@@ -279,6 +290,11 @@ export const useGameStore = create<GameStore>((set, get) => {
 
     incrementWrongAttempts: () => {
       set((state) => ({ wrongAttempts: state.wrongAttempts + 1 }));
+      get().saveGameState();
+    },
+
+    incrementInputClicks: () => {
+      set((state) => ({ inputClicks: state.inputClicks + 1 }));
       get().saveGameState();
     },
 

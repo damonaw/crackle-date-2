@@ -12,6 +12,7 @@ import { validateEquationInput } from '../lib/inputValidator';
 import { validateEquation } from '../lib/mathValidator';
 import { calculateScore, getScoreDescription } from '../lib/scoring';
 import DatePicker from './DatePicker';
+import AppHeader from './AppHeader';
 import './game-screen.css';
 
 type ViewMode = 'game' | 'stats' | 'achievements' | 'solutions' | 'tutorial';
@@ -156,7 +157,7 @@ export default function GameScreen() {
   const showInputClicks = useGameStore((state) => state.showInputClicks);
   const setShowInputClicks = useGameStore((state) => state.setShowInputClicks);
 
-  const { themeMode, resolvedMode, cycleThemeMode, nextThemeMode } = useThemeMode();
+  const { themeMode, resolvedMode, cycleThemeMode, nextThemeMode, setThemeMode } = useThemeMode();
 
   const [view, setView] = useState<ViewMode>('game');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -467,31 +468,33 @@ export default function GameScreen() {
 
   return (
     <div className="game-screen" data-view={view}>
-      <header className="game-header" data-condensed={isHeaderCondensed}>
-        <button
-          type="button"
-          className="icon-button"
-          aria-label="Open menu"
-          onClick={() => setMenuOpen(true)}
-        >
-          ☰
-        </button>
-        <div className="game-header-title">
-          <p className="game-header-tagline">Daily math challenge</p>
-          <h1>Crackle Date</h1>
-          <p className="game-header-date" aria-label="Puzzle date">
-            {currentDate}
-          </p>
-        </div>
-        <button
-          type="button"
-          className="icon-button"
-          onClick={cycleThemeMode}
-          aria-label={`Current theme ${themeMode}. ${nextThemeLabel}`}
-        >
-          {resolvedMode === 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
-        </button>
-      </header>
+      <AppHeader
+        condensed={isHeaderCondensed}
+        tagline="Daily math challenge"
+        title="Crackle Date"
+        date={currentDate}
+        dateLabel="Puzzle date"
+        leftSlot={
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Open menu"
+            onClick={() => setMenuOpen(true)}
+          >
+            ☰
+          </button>
+        }
+        rightSlot={
+          <button
+            type="button"
+            className="icon-button"
+            onClick={cycleThemeMode}
+            aria-label={`Current theme ${themeMode}. ${nextThemeLabel}`}
+          >
+            {resolvedMode === 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
+          </button>
+        }
+      />
 
       <main className="game-main" aria-live="polite">
         {view === 'game' ? (
@@ -641,7 +644,6 @@ export default function GameScreen() {
           <SolutionsPanel
             onBack={() => setView('game')}
             solutions={solutions}
-            currentDate={currentDate}
             onShare={handleShareSolutions}
           />
         ) : view === 'tutorial' ? (
@@ -663,21 +665,24 @@ export default function GameScreen() {
             role="document"
             onClick={(event) => event.stopPropagation()}
           >
-            <header className="menu-panel-header">
-              <div>
-                <p className="menu-panel-subtitle">Quick access</p>
-                <h2>Menu</h2>
-                <p className="menu-panel-description">Navigate or tweak the experience.</p>
-              </div>
-              <button
-                type="button"
-                className="menu-panel-close"
-                aria-label="Close menu"
-                onClick={() => setMenuOpen(false)}
-              >
-                ✕
-              </button>
-            </header>
+            <AppHeader
+              className="menu-panel-header"
+              condensed={isHeaderCondensed}
+              tagline="Crackle Date"
+              title="Menu"
+              date={currentDate}
+              leftSlot={null}
+              rightSlot={
+                <button
+                  type="button"
+                  className="icon-button menu-panel-close"
+                  aria-label="Close menu"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  ✕
+                </button>
+              }
+            />
             <div className="menu-panel-body">
               <section className="menu-panel-section">
                 <p className="menu-panel-label">Navigate</p>
@@ -691,7 +696,6 @@ export default function GameScreen() {
                     }}
                   >
                     <span className="menu-nav-title">Stats</span>
-                    <span className="menu-nav-description">Performance overview</span>
                   </button>
                   <button
                     type="button"
@@ -702,7 +706,6 @@ export default function GameScreen() {
                     }}
                   >
                     <span className="menu-nav-title">Solutions</span>
-                    <span className="menu-nav-description">See past equations</span>
                   </button>
                   <button
                     type="button"
@@ -713,7 +716,6 @@ export default function GameScreen() {
                     }}
                   >
                     <span className="menu-nav-title">Achievements</span>
-                    <span className="menu-nav-description">Unlocked goals</span>
                   </button>
                   <button
                     type="button"
@@ -724,22 +726,28 @@ export default function GameScreen() {
                     }}
                   >
                     <span className="menu-nav-title">Tutorial</span>
-                    <span className="menu-nav-description">How to play</span>
                   </button>
                 </div>
               </section>
 
               <section className="menu-panel-section">
                 <p className="menu-panel-label">Settings</p>
-                <div className="menu-setting-card">
+                <button
+                  type="button"
+                  className="menu-toggle"
+                  aria-pressed={themeMode === 'dark'}
+                  onClick={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')}
+                >
                   <div>
-                    <p className="menu-setting-title">Theme</p>
-                    <p className="menu-setting-description">{nextThemeLabel}</p>
+                    <p className="menu-toggle-title">Dark mode</p>
                   </div>
-                  <button type="button" className="menu-setting-button" onClick={cycleThemeMode}>
-                    Change
-                  </button>
-                </div>
+                  <span
+                    className="menu-toggle-indicator"
+                    data-state={themeMode === 'dark' ? 'on' : 'off'}
+                  >
+                    {themeMode === 'dark' ? 'On' : 'Off'}
+                  </span>
+                </button>
                 <button
                   type="button"
                   className="menu-toggle"
@@ -748,7 +756,6 @@ export default function GameScreen() {
                 >
                   <div>
                     <p className="menu-toggle-title">Easy mode</p>
-                    <p className="menu-toggle-description">Preview each side of the equation</p>
                   </div>
                   <span className="menu-toggle-indicator" data-state={easyMode ? 'on' : 'off'}>
                     {easyMode ? 'On' : 'Off'}
@@ -762,9 +769,6 @@ export default function GameScreen() {
                 >
                   <div>
                     <p className="menu-toggle-title">Show input clicks</p>
-                    <p className="menu-toggle-description">
-                      Toggle the click counter on the game board
-                    </p>
                   </div>
                   <span
                     className="menu-toggle-indicator"

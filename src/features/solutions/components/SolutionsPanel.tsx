@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import MathEquation from '../../math/components/MathEquation';
 import type { Solution } from '../../game/types';
+import PanelBackButton from '../../ui/components/PanelBackButton';
+import '../../ui/components/panel-base.css';
 import './solutions-panel.css';
 
 // Material UI style icons as SVG components
@@ -31,7 +33,6 @@ const ShareIcon = () => (
 interface SolutionsPanelProps {
   onBack?: () => void;
   solutions: Solution[];
-  currentDate: string;
   onShare?: () => void;
 }
 
@@ -64,117 +65,95 @@ const calculateStats = (solutions: Solution[]) => {
   };
 };
 
-export default function SolutionsPanel({
-  onBack,
-  solutions,
-  currentDate,
-  onShare,
-}: SolutionsPanelProps) {
+export default function SolutionsPanel({ onBack, solutions, onShare }: SolutionsPanelProps) {
   const solutionsReversed = useMemo(() => solutions.slice().reverse(), [solutions]);
   const stats = useMemo(() => calculateStats(solutions), [solutions]);
 
   return (
-    <section className="solutions-panel" aria-label="Solutions">
-      <header className="solutions-panel-header">
-        {onBack && (
-          <button
-            type="button"
-            className="solutions-panel-back"
-            onClick={onBack}
-            aria-label="Back to game"
-          >
-            ← Back
-          </button>
-        )}
-        <h2>Solutions</h2>
-        <p>Your equations for {currentDate}</p>
+    <section className="app-panel solutions-panel" aria-labelledby="solutions-heading">
+      <header className="app-panel-header solutions-panel-header">
+        {onBack && <PanelBackButton className="app-panel-back" onClick={onBack} />}
+        <h2 id="solutions-heading">Solutions</h2>
       </header>
 
-      <div className="solutions-panel-summary">
-        <div className="solutions-panel-stats">
-          <div className="solutions-panel-stat">
-            <div className="solutions-panel-stat-value">{stats.solutionCount}</div>
-            <div className="solutions-panel-stat-label">Solutions</div>
+      <div className="app-panel-body">
+        <div className="solutions-panel-summary" role="region" aria-label="Solution stats">
+          <div className="solutions-panel-stats">
+            {[
+              { label: 'Solutions', value: stats.solutionCount },
+              { label: 'Total Score', value: stats.totalScore },
+              { label: 'Average Score', value: stats.averageScore },
+              { label: 'Avg Time', value: formatTime(stats.averageTime) },
+              { label: 'Avg Clicks', value: solutions.length > 0 ? stats.averageClicks : '—' },
+            ].map((item) => (
+              <article key={item.label} className="solutions-panel-stat">
+                <p className="solutions-panel-stat-label">{item.label}</p>
+                <p className="solutions-panel-stat-value">{item.value}</p>
+              </article>
+            ))}
           </div>
-          <div className="solutions-panel-stat">
-            <div className="solutions-panel-stat-value">{stats.totalScore}</div>
-            <div className="solutions-panel-stat-label">Total Score</div>
-          </div>
-          <div className="solutions-panel-stat">
-            <div className="solutions-panel-stat-value">{stats.averageScore}</div>
-            <div className="solutions-panel-stat-label">Average Score</div>
-          </div>
-          <div className="solutions-panel-stat">
-            <div className="solutions-panel-stat-value">{formatTime(stats.averageTime)}</div>
-            <div className="solutions-panel-stat-label">Avg Time</div>
-          </div>
-          <div className="solutions-panel-stat">
-            <div className="solutions-panel-stat-value">
-              {solutions.length > 0 ? stats.averageClicks : '—'}
+        </div>
+
+        {solutionsReversed.length > 0 ? (
+          <div className="solutions-panel-list">
+            <div className="solutions-panel-list-header">
+              <h3>Today's solutions</h3>
+              {onShare && (
+                <button type="button" className="solutions-panel-share" onClick={onShare}>
+                  <ShareIcon />
+                  Share
+                </button>
+              )}
             </div>
-            <div className="solutions-panel-stat-label">Avg Clicks</div>
+            <ul>
+              {solutionsReversed.map((solution, index) => {
+                const key =
+                  solution.timestamp instanceof Date ? solution.timestamp.getTime() : index;
+
+                return (
+                  <li key={key} className="solutions-panel-item">
+                    <div className="solutions-panel-equation">
+                      <MathEquation
+                        equation={solution.equation}
+                        className="solutions-panel-equation-render"
+                      />
+                    </div>
+                    <div className="solutions-panel-meta">
+                      <div className="solutions-panel-primary-meta">
+                        <span className="solutions-panel-complexity">{solution.complexity}</span>
+                        <span className="solutions-panel-score">{solution.score} pts</span>
+                      </div>
+                      <div className="solutions-panel-secondary-meta">
+                        {solution.timeToSolve !== undefined && (
+                          <span className="solutions-panel-time" title="Time to solve">
+                            <TimerIcon /> {formatTime(solution.timeToSolve)}
+                          </span>
+                        )}
+                        {solution.wrongAttempts !== undefined && solution.wrongAttempts > 0 && (
+                          <span className="solutions-panel-attempts" title="Wrong attempts">
+                            <ErrorIcon /> {solution.wrongAttempts}
+                          </span>
+                        )}
+                        {solution.inputClicks !== undefined && (
+                          <span className="solutions-panel-clicks" title="Input clicks">
+                            <ClicksIcon /> {solution.inputClicks}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-        </div>
+        ) : (
+          <div className="solutions-panel-empty">
+            <div className="solutions-panel-empty-icon">📝</div>
+            <h3>No solutions yet</h3>
+            <p>Submit your first equation to start tracking your progress.</p>
+          </div>
+        )}
       </div>
-
-      {solutionsReversed.length > 0 ? (
-        <div className="solutions-panel-list">
-          <div className="solutions-panel-list-header">
-            <h3>Today's solutions</h3>
-            {onShare && (
-              <button type="button" className="solutions-panel-share" onClick={onShare}>
-                <ShareIcon />
-                Share
-              </button>
-            )}
-          </div>
-          <ul>
-            {solutionsReversed.map((solution, index) => {
-              const key = solution.timestamp instanceof Date ? solution.timestamp.getTime() : index;
-
-              return (
-                <li key={key} className="solutions-panel-item">
-                  <div className="solutions-panel-equation">
-                    <MathEquation
-                      equation={solution.equation}
-                      className="solutions-panel-equation-render"
-                    />
-                  </div>
-                  <div className="solutions-panel-meta">
-                    <div className="solutions-panel-primary-meta">
-                      <span className="solutions-panel-complexity">{solution.complexity}</span>
-                      <span className="solutions-panel-score">{solution.score} pts</span>
-                    </div>
-                    <div className="solutions-panel-secondary-meta">
-                      {solution.timeToSolve !== undefined && (
-                        <span className="solutions-panel-time" title="Time to solve">
-                          <TimerIcon /> {formatTime(solution.timeToSolve)}
-                        </span>
-                      )}
-                      {solution.wrongAttempts !== undefined && solution.wrongAttempts > 0 && (
-                        <span className="solutions-panel-attempts" title="Wrong attempts">
-                          <ErrorIcon /> {solution.wrongAttempts}
-                        </span>
-                      )}
-                      {solution.inputClicks !== undefined && (
-                        <span className="solutions-panel-clicks" title="Input clicks">
-                          <ClicksIcon /> {solution.inputClicks}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : (
-        <div className="solutions-panel-empty">
-          <div className="solutions-panel-empty-icon">📝</div>
-          <h3>No solutions yet</h3>
-          <p>Submit your first equation to start tracking your progress.</p>
-        </div>
-      )}
     </section>
   );
 }

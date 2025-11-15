@@ -1,76 +1,35 @@
-.achievements-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin: 0 auto;
-  max-width: 800px;
-  padding: 1rem;
-  width: 100%;
-}
-
-.achievements-panel-header {
-  margin-bottom: 1rem;
-  text-align: center;
-}
-
-.achievements-panel-back {
-  align-self: flex-start;
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 0.5rem;
-  text-decoration: none;
-  transition: opacity 0.2s ease;
-}
-
-.achievements-panel-back:hover {
-  opacity: 0.7;
-}
-
-.achievements-panel-header h2 {
-  color: var(--color-text-primary);
-  font-size: 2rem;
-  font-weight: 600;
-  margin: 0.5rem 0;
-}
-
-.achievements-panel-header p {
-  color: var(--color-text-secondary);
-  margin: 0;
-}
-
 .achievements-panel-summary {
   background: var(--color-surface);
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 1rem;
+  box-shadow: 0 25px 60px var(--color-shadow-soft);
   padding: 1.5rem;
 }
 
 .achievements-panel-stats {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(3, 1fr);
-  text-align: center;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
 .achievements-panel-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  border-radius: 0.9rem;
+  padding: 1rem;
+  text-align: center;
 }
 
 .achievements-panel-stat-value {
-  color: var(--color-primary);
-  font-size: 2rem;
+  color: var(--color-accent);
+  font-size: clamp(1.7rem, 2vw, 2.2rem);
   font-weight: 700;
+  margin: 0;
 }
 
 .achievements-panel-stat-label {
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  margin: 0.2rem 0 0;
   text-transform: uppercase;
 }
 
@@ -81,12 +40,11 @@
 }
 
 .achievements-panel-category-title {
-  border-bottom: 2px solid var(--color-border);
   color: var(--color-text-primary);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  margin: 0 0 1rem;
-  padding-bottom: 0.5rem;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
 }
 
 .achievements-panel-list {
@@ -101,8 +59,9 @@
 .achievements-panel-item {
   align-items: flex-start;
   background: var(--color-surface);
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 1rem;
+  box-shadow: 0 20px 45px var(--color-shadow-soft);
   display: flex;
   gap: 1rem;
   padding: 1rem;
@@ -112,8 +71,8 @@
 }
 
 .achievements-panel-item:hover {
-  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
-  transform: translateY(-2px);
+  box-shadow: 0 30px 55px var(--color-shadow-soft);
+  transform: translateY(-4px);
 }
 
 .achievements-panel-item[data-state='unlocked'] {
@@ -158,7 +117,7 @@
   margin: 0;
 }
 
-.achievements-panel-description {
+.achievements-panel-detail {
   color: var(--color-text-secondary);
   font-size: 0.875rem;
   line-height: 1.4;
@@ -174,20 +133,16 @@
 }
 
 .achievements-panel-progress {
-  color: var(--color-primary);
-  font-weight: 500;
+  color: var(--color-accent);
+  font-weight: 600;
 }
 
 .achievements-panel-date {
   color: var(--color-success);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 @media (width >= 768px) {
-  .achievements-panel {
-    padding: 2rem;
-  }
-
   .achievements-panel-stats {
     gap: 2rem;
     grid-template-columns: repeat(3, 1fr);
@@ -201,11 +156,6 @@
 }
 
 @media (width <= 767px) {
-  .achievements-panel {
-    gap: 1rem;
-    padding: 1rem;
-  }
-
   .achievements-panel-stats {
     gap: 0.5rem;
     grid-template-columns: repeat(3, 1fr);

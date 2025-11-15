@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import PanelBackButton from '../../ui/components/PanelBackButton';
+import '../../ui/components/panel-base.css';
 import './stats-panel.css';
 
 interface StatsPanelProps {
@@ -21,44 +23,26 @@ export default function StatsPanel({ onBack, score, streak, inputClicks }: Stats
   }, [inputClicks, score, streak]);
 
   return (
-    <section className="stats-panel" aria-label="Player statistics">
-      <header className="stats-panel-header">
-        {onBack && (
-          <button
-            type="button"
-            className="stats-panel-back"
-            onClick={onBack}
-            aria-label="Back to game"
-          >
-            ← Back
-          </button>
-        )}
-        <h2>Statistics</h2>
-        <p>Track your performance and progress</p>
+    <section className="app-panel stats-panel" aria-labelledby="stats-heading">
+      <header className="app-panel-header stats-panel-header">
+        {onBack && <PanelBackButton className="app-panel-back" onClick={onBack} />}
+        <h2 id="stats-heading">Statistics</h2>
       </header>
 
-      <div className="stats-panel-summary">
-        <div className="stats-panel-stats">
-          <div className="stats-panel-stat">
-            <div className="stats-panel-stat-value">{stats.totalScore}</div>
-            <div className="stats-panel-stat-label">Total Score</div>
-          </div>
-          <div className="stats-panel-stat">
-            <div className="stats-panel-stat-value">{stats.currentStreak}</div>
-            <div className="stats-panel-stat-label">Current Streak</div>
-          </div>
-          <div className="stats-panel-stat">
-            <div className="stats-panel-stat-value">{stats.averageScore}</div>
-            <div className="stats-panel-stat-label">Average Score</div>
-          </div>
-          <div className="stats-panel-stat">
-            <div className="stats-panel-stat-value">{stats.daysPlayed}</div>
-            <div className="stats-panel-stat-label">Days Played</div>
-          </div>
-          <div className="stats-panel-stat">
-            <div className="stats-panel-stat-value">{stats.currentClicks}</div>
-            <div className="stats-panel-stat-label">Current Clicks</div>
-          </div>
+      <div className="app-panel-body">
+        <div className="stats-panel-grid" role="region" aria-label="Statistic summaries">
+          {[
+            { label: 'Total Score', value: stats.totalScore },
+            { label: 'Current Streak', value: stats.currentStreak },
+            { label: 'Average Score', value: stats.averageScore },
+            { label: 'Days Played', value: stats.daysPlayed },
+            { label: 'Current Clicks', value: stats.currentClicks },
+          ].map((item) => (
+            <article key={item.label} className="stats-panel-card">
+              <p className="stats-panel-card-label">{item.label}</p>
+              <p className="stats-panel-card-value">{item.value}</p>
+            </article>
+          ))}
         </div>
       </div>
     </section>

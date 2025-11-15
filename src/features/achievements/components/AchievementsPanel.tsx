@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import type { AchievementStatus } from '../../game/types';
+import PanelBackButton from '../../ui/components/PanelBackButton';
+import '../../ui/components/panel-base.css';
 import './achievements-panel.css';
 
 // Material UI style icons as SVG components
@@ -48,72 +50,64 @@ export default function AchievementsPanel({ onBack, achievements }: Achievements
   }, [achievements]);
 
   return (
-    <section className="achievements-panel" aria-label="Achievements">
-      <header className="achievements-panel-header">
-        {onBack && (
-          <button
-            type="button"
-            className="achievements-panel-back"
-            onClick={onBack}
-            aria-label="Back to game"
-          >
-            ← Back
-          </button>
-        )}
-        <h2>Achievements</h2>
-        <p>Track your progress and unlock rewards</p>
+    <section className="app-panel achievements-panel" aria-labelledby="achievements-heading">
+      <header className="app-panel-header achievements-panel-header">
+        {onBack && <PanelBackButton className="app-panel-back" onClick={onBack} />}
+        <h2 id="achievements-heading">Achievements</h2>
       </header>
 
-      <div className="achievements-panel-summary">
-        <div className="achievements-panel-stats">
-          <div className="achievements-panel-stat">
-            <div className="achievements-panel-stat-value">{stats.unlockedCount}</div>
-            <div className="achievements-panel-stat-label">Unlocked</div>
-          </div>
-          <div className="achievements-panel-stat">
-            <div className="achievements-panel-stat-value">{stats.totalCount}</div>
-            <div className="achievements-panel-stat-label">Total</div>
-          </div>
-          <div className="achievements-panel-stat">
-            <div className="achievements-panel-stat-value">{stats.percentage}%</div>
-            <div className="achievements-panel-stat-label">Complete</div>
+      <div className="app-panel-body">
+        <div className="achievements-panel-summary" role="region" aria-label="Achievement stats">
+          <div className="achievements-panel-stats">
+            {[
+              { label: 'Unlocked', value: stats.unlockedCount },
+              { label: 'Total', value: stats.totalCount },
+              { label: 'Complete', value: `${stats.percentage}%` },
+            ].map((item) => (
+              <article key={item.label} className="achievements-panel-stat">
+                <p className="achievements-panel-stat-label">{item.label}</p>
+                <p className="achievements-panel-stat-value">{item.value}</p>
+              </article>
+            ))}
           </div>
         </div>
-      </div>
 
-      <div className="achievements-panel-categories">
-        {Object.entries(achievementsByCategory).map(([category, categoryAchievements]) => (
-          <div key={category} className="achievements-panel-category">
-            <h3 className="achievements-panel-category-title">{category}</h3>
-            <ul className="achievements-panel-list">
-              {categoryAchievements.map((achievement) => (
-                <li
-                  key={achievement.id}
-                  className="achievements-panel-item"
-                  data-state={achievement.unlocked ? 'unlocked' : 'locked'}
-                >
-                  <div className="achievements-panel-icon" aria-hidden="true">
-                    {achievement.unlocked ? <EmojiEventsIcon /> : <LockIcon />}
-                  </div>
-                  <div className="achievements-panel-content">
-                    <div className="achievements-panel-title">{achievement.title}</div>
-                    <p className="achievements-panel-description">{achievement.description}</p>
-                    <div className="achievements-panel-meta">
-                      {achievement.progress && (
-                        <span className="achievements-panel-progress">{achievement.progress}</span>
-                      )}
-                      {achievement.unlocked && achievement.unlockedOn && (
-                        <span className="achievements-panel-date">
-                          Unlocked {achievement.unlockedOn}
-                        </span>
-                      )}
+        <div className="achievements-panel-categories">
+          {Object.entries(achievementsByCategory).map(([category, categoryAchievements]) => (
+            <div key={category} className="achievements-panel-category">
+              <h3 className="achievements-panel-category-title">{category}</h3>
+              <ul className="achievements-panel-list">
+                {categoryAchievements.map((achievement) => (
+                  <li
+                    key={achievement.id}
+                    className="achievements-panel-item"
+                    data-state={achievement.unlocked ? 'unlocked' : 'locked'}
+                  >
+                    <div className="achievements-panel-icon" aria-hidden="true">
+                      {achievement.unlocked ? <EmojiEventsIcon /> : <LockIcon />}
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+                    <div className="achievements-panel-content">
+                      <div className="achievements-panel-title">{achievement.title}</div>
+                      <p className="achievements-panel-detail">{achievement.description}</p>
+                      <div className="achievements-panel-meta">
+                        {achievement.progress && (
+                          <span className="achievements-panel-progress">
+                            {achievement.progress}
+                          </span>
+                        )}
+                        {achievement.unlocked && achievement.unlockedOn && (
+                          <span className="achievements-panel-date">
+                            Unlocked {achievement.unlockedOn}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
